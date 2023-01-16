@@ -20,7 +20,7 @@ public class Testing {
         String nuc2 = "";
         String nuc3 = "";
         try {
-            File file = new File("path/to/file.txt");
+            File file = new File(inFile);
             Scanner sc = new Scanner(file);
             nuc1 = sc.nextLine();
             nuc2 = sc.nextLine();
@@ -78,26 +78,62 @@ public class Testing {
 
         Boolean foundWinner = false;
 
-        List<String> resultMatchSequences = (List<String>) results.get(1);
-        if ((resultMatchSequences.get(0) == assertMatchSequences.get(0) && resultMatchSequences.get(1) == assertMatchSequences.get(2) && resultMatchSequences.get(2) == assertMatchSequences.get(2)) || 
-            (resultMatchSequences.get(0) == assertMatchSequences.get(0) && resultMatchSequences.get(2) == assertMatchSequences.get(1) && resultMatchSequences.get(2) == assertMatchSequences.get(2)) || 
-            (resultMatchSequences.get(1) == assertMatchSequences.get(0) && resultMatchSequences.get(0) == assertMatchSequences.get(2) && resultMatchSequences.get(2) == assertMatchSequences.get(2)) || 
-            (resultMatchSequences.get(1) == assertMatchSequences.get(0) && resultMatchSequences.get(2) == assertMatchSequences.get(0) && resultMatchSequences.get(2) == assertMatchSequences.get(2)) || 
-            (resultMatchSequences.get(2) == assertMatchSequences.get(0) && resultMatchSequences.get(0) == assertMatchSequences.get(1) && resultMatchSequences.get(2) == assertMatchSequences.get(2)) || 
-            (resultMatchSequences.get(2) == assertMatchSequences.get(0) && resultMatchSequences.get(1) == assertMatchSequences.get(0) && resultMatchSequences.get(2) == assertMatchSequences.get(2)))
-                foundWinner = true;
+        List<List<String>> resultMatchSequencesSets = (List<List<String>>) results.get(1);
+        for (List<String> resultMatchSequences : resultMatchSequencesSets) {
+            if ((resultMatchSequences.get(0).equals(assertMatchSequences.get(0)) && resultMatchSequences.get(1).equals(assertMatchSequences.get(1)) && resultMatchSequences.get(2).equals(assertMatchSequences.get(2))) || 
+                (resultMatchSequences.get(0).equals(assertMatchSequences.get(0)) && resultMatchSequences.get(2).equals(assertMatchSequences.get(1)) && resultMatchSequences.get(1).equals(assertMatchSequences.get(2))) || 
+                (resultMatchSequences.get(1).equals(assertMatchSequences.get(0)) && resultMatchSequences.get(0).equals(assertMatchSequences.get(1)) && resultMatchSequences.get(2).equals(assertMatchSequences.get(2))) || 
+                (resultMatchSequences.get(1).equals(assertMatchSequences.get(0)) && resultMatchSequences.get(2).equals(assertMatchSequences.get(1)) && resultMatchSequences.get(0).equals(assertMatchSequences.get(2))) || 
+                (resultMatchSequences.get(2).equals(assertMatchSequences.get(0)) && resultMatchSequences.get(0).equals(assertMatchSequences.get(1)) && resultMatchSequences.get(1).equals(assertMatchSequences.get(2))) || 
+                (resultMatchSequences.get(2).equals(assertMatchSequences.get(0)) && resultMatchSequences.get(1).equals(assertMatchSequences.get(1)) && resultMatchSequences.get(0).equals(assertMatchSequences.get(2))))
+                    foundWinner = true;
+        }
         assertTrue(foundWinner);
     }
 
+    public void iterativeTestHarness(String fileId) {
+        String rt = "/Users/jeremiahbuckley/Documents/code/java-basic-app/tst/QuarkusStartingApp/src/test/resources/";
+        fileBasedTest(rt.concat("input/sample_" + fileId + ".txt"), rt.concat("output/sample_" + fileId + ".txt"));
+    }
     @Test
     public void testSample0() {
-        String rt = "/Users/jeremiahbuckley/Documents/code/java-basic-app/tst/QuarkusStartingApp/src/test/resources/";
-        fileBasedTest(rt.concat("input/sample_0.txt"), rt.concat("output/sample_0.txt"));
+        iterativeTestHarness("0");
     }
-
+    @Test
+    public void testSample1() {
+        iterativeTestHarness("1");
+    }
     @Test
     public void testSample2() {
-        String rt = "/Users/jeremiahbuckley/Documents/code/java-basic-app/tst/QuarkusStartingApp/src/test/resource/";
-        fileBasedTest(rt.concat("input/sample_1.txt"), rt.concat("output/sample_1.txt"));
+        iterativeTestHarness("2");
     }
+    @Test
+    public void testSample3() {
+        iterativeTestHarness("3");
+    }
+    @Test
+    public void testSample4() {
+        iterativeTestHarness("4");
+    }
+    @Test
+    public void testSample5() {
+        iterativeTestHarness("5");
+    }
+    @Test
+    public void testSample6() {
+        iterativeTestHarness("6");
+    }
+
+    public void testSample7() {
+        iterativeTestHarness("7");
+    }
+    @Test
+    public void testSample8() {
+        iterativeTestHarness("8");
+    }
+    @Test
+    public void testSample9() {
+        iterativeTestHarness("9");
+    }
+
 }

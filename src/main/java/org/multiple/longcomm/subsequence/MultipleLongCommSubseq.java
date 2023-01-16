@@ -84,10 +84,13 @@ public class MultipleLongCommSubseq {
             results = findCommonSubseq(nucs, scoring);
         } catch (Exception e) {
             System.out.print(e.getStackTrace());
+            System.out.print(e.getMessage());
         }
         int resultsScore = (int) results.get(0);
         List<List<String>> resultsCandidates = (List<List<String>>) results.get(1);
 
+        System.out.println();
+        System.out.println("result");
         for(List<String> cSet : resultsCandidates) {
             System.out.println(resultsScore);
             for(String candidate : cSet) {
@@ -108,21 +111,21 @@ public class MultipleLongCommSubseq {
         List<List<List<Integer>>> scoreKeeper = new ArrayList<List<List<Integer>>>();
         List<List<List<String>>> incomingDirectionKeeper = new ArrayList<List<List<String>>>();
 
-        for (int i = 0; i < nucs.get(0).length; i++) {
+        for (int i = 0; i < nucs.get(0).length + 1; i++) {
             scoreKeeper.add(new ArrayList<List<Integer>>());
             incomingDirectionKeeper.add(new ArrayList<List<String>>());
-            for (int j = 0; j < nucs.get(1).length; j++) {
+            for (int j = 0; j < nucs.get(1).length + 1; j++) {
                 scoreKeeper.get(i).add(new ArrayList<Integer>());
                 incomingDirectionKeeper.get(i).add(new ArrayList<String>());
-                for (int k = 0; k < nucs.get(2).length; k++) {
+                for (int k = 0; k < nucs.get(2).length + 1; k++) {
                     scoreKeeper.get(i).get(j).add(Integer.MIN_VALUE);
                     incomingDirectionKeeper.get(i).get(j).add("*");
                 }
             }
         }
 
-        for (int i = 0; i < nucs.get(0).length; i++) {
-            for (int j = 0; j < nucs.get(1).length; j++) {
+        for (int i = 0; i < nucs.get(0).length + 1; i++) {
+            for (int j = 0; j < nucs.get(1).length + 1; j++) {
                 scoreKeeper.get(i).get(j).set(0, scoring.getIndelPenalty());
                 if (i == 0 && j == 0) {
                     incomingDirectionKeeper.get(i).get(j).set(0,"-");
@@ -135,8 +138,8 @@ public class MultipleLongCommSubseq {
                 }
             }
         }
-        for (int i = 0; i < nucs.get(1).length; i++) {
-            for (int j = 0; j < nucs.get(2).length; j++) {
+        for (int i = 0; i < nucs.get(1).length + 1; i++) {
+            for (int j = 0; j < nucs.get(2).length + 1; j++) {
                 scoreKeeper.get(0).get(i).set(j, scoring.getIndelPenalty());
                 if (i == 0 && j == 0) {
                     incomingDirectionKeeper.get(0).get(i).set(j,"-");
@@ -149,8 +152,8 @@ public class MultipleLongCommSubseq {
                 }
             }
         }
-        for (int i = 0; i < nucs.get(0).length; i++) {
-            for (int j = 0; j < nucs.get(2).length; j++) {
+        for (int i = 0; i < nucs.get(0).length + 1; i++) {
+            for (int j = 0; j < nucs.get(2).length + 1; j++) {
                 scoreKeeper.get(i).get(0).set(j, scoring.getIndelPenalty());
                 if (i == 0 && j == 0) {
                     incomingDirectionKeeper.get(i).get(0).set(j,"-");
@@ -170,9 +173,9 @@ public class MultipleLongCommSubseq {
         }
 
 
-        for(int i = 1; i < nucs.get(0).length; i++) {
-            for(int j = 1; j < nucs.get(1).length; j++) {
-                for(int k = 1; k < nucs.get(2).length; k++) {
+        for(int i = 1; i < nucs.get(0).length + 1; i++) {
+            for(int j = 1; j < nucs.get(1).length + 1; j++) {
+                for(int k = 1; k < nucs.get(2).length + 1; k++) {
                     int score = Collections.max(Arrays.asList(
                         scoreKeeper.get(i-1).get(j-1).get(k-1) + scoring.getMatchVal(Arrays.asList(nucs.get(0)[i-1], nucs.get(1)[j-1], nucs.get(2)[k-1])),
                         scoreKeeper.get(i-1).get(j-1).get(k) + scoring.indelPenalty,
@@ -220,7 +223,7 @@ public class MultipleLongCommSubseq {
 
         Map<PathNode, List<PathNode>> existingPaths = new HashMap<PathNode, List<PathNode>>();
 
-        walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, nucs.get(0).length-1, nucs.get(1).length-1, nucs.get(2).length-1, 0);
+        walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, nucs.get(0).length, nucs.get(1).length, nucs.get(2).length, 0);
 
         if (DEBUG) {
             for(Map.Entry<PathNode, List<PathNode>> kvp : existingPaths.entrySet()) {
@@ -232,7 +235,7 @@ public class MultipleLongCommSubseq {
             System.out.println();
         }
         
-        System.out.println("score: " + scoreKeeper.get(nucs.get(0).length - 1).get(nucs.get(1).length - 1).get(nucs.get(2).length - 1));
+        System.out.println("score: " + scoreKeeper.get(nucs.get(0).length).get(nucs.get(1).length).get(nucs.get(2).length));
     
         for (int i = 0; i < 5; i++) {
             System.out.println();
@@ -254,7 +257,7 @@ public class MultipleLongCommSubseq {
             }
         }
 
-        int finalScore = scoreKeeper.get(nucs.get(0).length-1).get(nucs.get(1).length-1).get(nucs.get(2).length-1);
+        int finalScore = scoreKeeper.get(nucs.get(0).length).get(nucs.get(1).length).get(nucs.get(2).length);
 
         List<Object> results = new ArrayList<Object>();
         results.add(finalScore);
@@ -360,11 +363,11 @@ public class MultipleLongCommSubseq {
         String str1 = "";
         String instr1 = "";
 
-        for(int i = 0; i < nucs.get(0).length; i++) {
+        for(int i = 0; i < nucs.get(0).length + 1; i++) {
             String str2 = "";
             String instr2 = "";
 
-            for(int j = 0; j < nucs.get(1).length; j++) {
+            for(int j = 0; j < nucs.get(1).length + 1; j++) {
                 String str3 = Arrays.toString(scoreKeeper.get(i).get(j).toArray());
                 String instr3 = Arrays.toString(incomingDirectionKeeper.get(i).get(j).toArray());
                 if (str2.length() > 0) {
@@ -385,6 +388,7 @@ public class MultipleLongCommSubseq {
         }
 
         System.out.println(str1);
+        System.out.println();
         System.out.println(instr1);
 
     }
