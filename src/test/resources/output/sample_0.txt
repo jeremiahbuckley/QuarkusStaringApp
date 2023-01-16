@@ -1,4 +1,4 @@
-3
-ATATCC-G-
----TCC-GA
-ATGTACTG-
+1
+A-
+AT
+A-
