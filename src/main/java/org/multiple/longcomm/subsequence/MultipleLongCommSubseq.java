@@ -10,6 +10,7 @@ import java.lang.Math;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Stack;
 import java.lang.IllegalStateException;
 
 
@@ -223,6 +224,7 @@ public class MultipleLongCommSubseq {
 
         Map<PathNode, List<PathNode>> existingPaths = new HashMap<PathNode, List<PathNode>>();
 
+        // walkBackwardsNoRecurse(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, nucs.get(0).length, nucs.get(1).length, nucs.get(2).length, 0);
         walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, nucs.get(0).length, nucs.get(1).length, nucs.get(2).length, 0);
 
         if (DEBUG) {
@@ -307,54 +309,160 @@ public class MultipleLongCommSubseq {
             if (DEBUG) {
                 System.out.println(" " + new String(new char[tabs]).replace("\0", " ") + dir);
             }
+            int[] prevNodeIdx = new int[3];
             if (dir.equals("1")) {
-                walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, i-1, j-1, k-1, tabs+1);
-                int[] followIdx = new int[3];
-                followIdx[0] = i-1; followIdx[1] = j-1; followIdx[2] = k-1;
-                PathNode curNode = new PathNode(followIdx);        
-                existingPaths.get(curNode).add(myNode);
+                prevNodeIdx[0] = i-1; prevNodeIdx[1] = j-1; prevNodeIdx[2] = k-1;
             } else if (dir.equals("2")) {
-                walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, i-1, j-1, k, tabs+1);
-                int[] followIdx = new int[3];
-                followIdx[0] = i-1; followIdx[1] = j-1; followIdx[2] = k;
-                PathNode curNode = new PathNode(followIdx);        
-                existingPaths.get(curNode).add(myNode);
+                prevNodeIdx[0] = i-1; prevNodeIdx[1] = j-1; prevNodeIdx[2] = k;
             } else if (dir.equals("3")) {
-                walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, i, j-1, k-1, tabs+1);
-                int[] followIdx = new int[3];
-                followIdx[0] = i; followIdx[1] = j-1; followIdx[2] = k-1;
-                PathNode curNode = new PathNode(followIdx);        
-                existingPaths.get(curNode).add(myNode);
+                prevNodeIdx[0] = i; prevNodeIdx[1] = j-1; prevNodeIdx[2] = k-1;
             } else if (dir.equals("4")) {
-                walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, i, j-1, k, tabs+1);
-                int[] followIdx = new int[3];
-                followIdx[0] = i; followIdx[1] = j-1; followIdx[2] = k;
-                PathNode curNode = new PathNode(followIdx);        
-                existingPaths.get(curNode).add(myNode);
+                prevNodeIdx[0] = i; prevNodeIdx[1] = j-1; prevNodeIdx[2] = k;
             } else if (dir.equals("5")) {
-                walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, i-1, j, k-1, tabs+1);
-                int[] followIdx = new int[3];
-                followIdx[0] = i-1; followIdx[1] = j; followIdx[2] = k-1;
-                PathNode curNode = new PathNode(followIdx);        
-                existingPaths.get(curNode).add(myNode);
+                prevNodeIdx[0] = i-1; prevNodeIdx[1] = j; prevNodeIdx[2] = k-1;
             } else if (dir.equals("6")) {
-                walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, i-1, j, k, tabs+1);
-                int[] followIdx = new int[3];
-                followIdx[0] = i-1; followIdx[1] = j; followIdx[2] = k;
-                PathNode curNode = new PathNode(followIdx);        
-                existingPaths.get(curNode).add(myNode);
+                prevNodeIdx[0] = i-1; prevNodeIdx[1] = j; prevNodeIdx[2] = k;
             } else if (dir.equals("7")) {
-                walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, i, j, k-1, tabs+1);
-                int[] followIdx = new int[3];
-                followIdx[0] = i; followIdx[1] = j; followIdx[2] = k-1;
-                PathNode curNode = new PathNode(followIdx);        
-                existingPaths.get(curNode).add(myNode);
+                prevNodeIdx[0] = i; prevNodeIdx[1] = j; prevNodeIdx[2] = k-1;
             } else {
                 throw new IllegalStateException(String.format("Unexpected 000 branch with node: %s", myNode.toString()));
             }
+            walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, prevNodeIdx[0], prevNodeIdx[1], prevNodeIdx[2], tabs+1);
+            PathNode prevNode = new PathNode(prevNodeIdx);        
+            existingPaths.get(prevNode).add(myNode);
+
         }
         existingPaths.put(myNode, new ArrayList<PathNode>());
 
+
+        if (DEBUG) {
+            System.out.println(new String(new char[tabs]).replace("\0", " ") + "findPath - existingPaths");            
+            for(Map.Entry<PathNode, List<PathNode>> kvp : existingPaths.entrySet()) {
+                System.out.println(new String(new char[tabs]).replace("\0", " ") + kvp.getKey().toString());
+                for(PathNode n : kvp.getValue()){
+                    System.out.println(new String(new char[tabs+1]).replace("\0", " ") + n.toString());
+                }
+            }
+            System.out.println();
+        }
+        return;
+    }
+
+    public static void walkBackwardsNoRecurse(List<List<List<Integer>>> scoreKeeper, List<List<List<String>>> incomingDirectionKeeper, List<String[]> nucs, Map<PathNode, List<PathNode>> existingPaths, int i, int j, int k, int tabs) throws Exception, IllegalStateException {
+
+        Stack<List<Object>> loopStack = new Stack<List<Object>>();
+
+        List<Object> newStackFrame = new ArrayList<Object>();        
+        int[] initNodeIdx = new int[3];
+        initNodeIdx[0] = i; initNodeIdx[1] = j; initNodeIdx[2] = k;
+        newStackFrame.add(initNodeIdx);
+        
+        loopStack.push(newStackFrame);
+
+        while (!loopStack.empty()) {
+            List<Object> currentStackFrame = loopStack.pop();
+            int[] loopNodeIdx = (int[]) currentStackFrame.get(0);
+
+            if (loopNodeIdx[0] < 0 || loopNodeIdx[1] < 0 || loopNodeIdx[2] < 0) {
+                throw new Exception("  " + new String(new char[tabs]).replace("\0", " ") + "invalid value: " + Arrays.toString(loopNodeIdx));    
+            }
+
+            int[] nIdx = new int[3];
+            nIdx[0] = loopNodeIdx[0]; nIdx[1] = loopNodeIdx[1]; nIdx[2] = loopNodeIdx[2];
+            PathNode myNode = new PathNode(nIdx);
+
+            if (DEBUG) {
+                System.out.println("  " + new String(new char[tabs]).replace("\0"," ") + "cn: " + Arrays.toString(nIdx));
+            }
+    
+            if (existingPaths.containsKey(myNode)) {
+                continue;
+            }
+
+            int[] zeroIdx = new int[3];
+            zeroIdx[0] = 0; zeroIdx[1] = 0; zeroIdx[2] = 0;
+            if (myNode.equals(new PathNode(zeroIdx))) {
+                existingPaths.put(myNode, new ArrayList<>());
+                try {
+                    PathNode followNode = (PathNode) currentStackFrame.get(1);
+                    existingPaths.get(myNode).add(followNode);
+                } catch (IndexOutOfBoundsException e) {
+                    int ij = 0;
+                    // no-op, this can happen at times
+                }
+                continue;
+            }
+
+            if (TIMED_STATUS && (NEXT_INTERVAL < System.currentTimeMillis())) {
+                System.out.println("timed alert - walk_backwards - node: " + myNode.toString());
+                NEXT_INTERVAL = System.currentTimeMillis() + SECONDS_CONST_15;
+            }
+
+            String[] directions = incomingDirectionKeeper.get(nIdx[0]).get(nIdx[1]).get(nIdx[2]).split("");
+
+            if (DEBUG) {
+                System.out.println(" " + new String(new char[tabs]).replace("\0", " ") + Arrays.toString(directions));
+            }
+
+            for (int x = 0; x < directions.length; x++) {
+                String dir = directions[x];
+                if (DEBUG) {
+                    System.out.println(" " + new String(new char[tabs]).replace("\0", " ") + dir);
+                }
+                int[] prevNodeIdx = new int[3];
+                if (dir.equals("1")) {
+                    prevNodeIdx[0] = nIdx[0]-1; prevNodeIdx[1] = nIdx[1]-1; prevNodeIdx[2] = nIdx[2]-1;
+                } else if (dir.equals("2")) {
+                    prevNodeIdx[0] = nIdx[0]-1; prevNodeIdx[1] = nIdx[1]-1; prevNodeIdx[2] = nIdx[2];
+                } else if (dir.equals("3")) {
+                    prevNodeIdx[0] = nIdx[0]; prevNodeIdx[1] = nIdx[1]-1; prevNodeIdx[2] = nIdx[2]-1;
+                } else if (dir.equals("4")) {
+                    prevNodeIdx[0] = nIdx[0]; prevNodeIdx[1] = nIdx[1]-1; prevNodeIdx[2] = nIdx[2];
+                } else if (dir.equals("5")) {
+                    prevNodeIdx[0] = nIdx[0]-1; prevNodeIdx[1] = nIdx[1]; prevNodeIdx[2] = nIdx[2]-1;
+                } else if (dir.equals("6")) {
+                    prevNodeIdx[0] = nIdx[0]-1; prevNodeIdx[1] = nIdx[1]; prevNodeIdx[2] = nIdx[2];
+                } else if (dir.equals("7")) {
+                    prevNodeIdx[0] = nIdx[0]; prevNodeIdx[1] = nIdx[1]; prevNodeIdx[2] = nIdx[2]-1;
+                } else {
+                    throw new IllegalStateException(String.format("Unexpected 000 branch with node: %s", myNode.toString()));
+                }
+
+                List<Object> nextStackFrame = new ArrayList<Object>();
+
+                // loopStack.push(followIdx);
+                // walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, followIdx[0], followIdx[1], followIdx[2], tabs+1);
+                // PathNode curNode = new PathNode(followIdx);        
+                System.out.println("in loop " + Arrays.toString(prevNodeIdx));
+                nextStackFrame.add(prevNodeIdx);
+                nextStackFrame.add(myNode);
+                loopStack.push(nextStackFrame);
+
+                // existingPaths.get(curNode).add(myNode);
+    
+            }
+
+            existingPaths.put(myNode, new ArrayList<PathNode>());
+            try {
+                PathNode followNode = (PathNode) currentStackFrame.get(1);
+                existingPaths.get(myNode).add(followNode);
+            } catch (IndexOutOfBoundsException e) {
+                int ij = 0;
+                // no-op, this can happen at times
+            }
+
+            if (DEBUG) {
+                System.out.println(new String(new char[tabs]).replace("\0", " ") + "findPath - existingPaths");            
+                for(Map.Entry<PathNode, List<PathNode>> kvp : existingPaths.entrySet()) {
+                    System.out.println(new String(new char[tabs]).replace("\0", " ") + kvp.getKey().toString());
+                    for(PathNode n : kvp.getValue()){
+                        System.out.println(new String(new char[tabs+1]).replace("\0", " ") + n.toString());
+                    }
+                }
+                System.out.println();
+            }
+    
+        }
         return;
     }
 
