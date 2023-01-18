@@ -77,6 +77,8 @@ public class Testing {
             e.printStackTrace();
         }
 
+        System.out.println((int)results.get(0));
+        System.out.println(assertPathScore);
         assertEquals((int)results.get(0), assertPathScore);
 
         Boolean foundWinner = false;

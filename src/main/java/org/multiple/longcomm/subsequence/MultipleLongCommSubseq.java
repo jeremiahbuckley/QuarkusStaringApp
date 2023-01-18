@@ -75,6 +75,25 @@ public class MultipleLongCommSubseq {
         String[][][] incoming_direction_keeper = new String[seq1.length + 1][seq2.length + 1][seq3.length + 1];
         Map<String, List<String>> existing_paths = new HashMap<>();
 
+// jbtest
+Map<List<Integer>, String> testMap = new HashMap<List<Integer>, String>();
+List<Integer> key1 = new ArrayList<Integer>(Arrays.asList(Integer.valueOf(8), Integer.valueOf(3), Integer.valueOf(100)));
+testMap.put(key1, "foo");
+List<Integer> key2 = new ArrayList<Integer>(Arrays.asList(Integer.valueOf(8), Integer.valueOf(3), Integer.valueOf(100)));
+testMap.put(key2, "bar");
+List<Integer> key3 = new ArrayList<Integer>(Arrays.asList(Integer.valueOf(3), Integer.valueOf(8), Integer.valueOf(100)));
+testMap.put(key3, "pop");
+List<Integer> key4 = new ArrayList<Integer>(Arrays.asList(Integer.valueOf(3), Integer.valueOf(18), Integer.valueOf(100)));
+testMap.put(key4, "fizz");
+
+for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
+    System.out.print(kvp.getKey().toString());
+    System.out.println(kvp.getValue());
+}
+
+// end jb test
+
+
         List<String[]> nucs = new ArrayList<String[]>();
         nucs.add(seq1);
         nucs.add(seq2);
@@ -91,17 +110,16 @@ public class MultipleLongCommSubseq {
         List<List<String>> resultsCandidates = (List<List<String>>) results.get(1);
 
         System.out.println();
-        System.out.println("result");
-        Boolean printedOne = false;
+        System.out.println("result, showing sample of total created (" + resultsCandidates.size() + ")");
+        int maxOut = 20;
         for(List<String> cSet : resultsCandidates) {
-            if (!printedOne) {
+            if (maxOut > 0) {
                 System.out.println(resultsScore);
                 for(String candidate : cSet) {
                     System.out.println(candidate);
                 }
                 System.out.println();
-                printedOne = true;
-    
+                maxOut -= 1;    
             }
         }
 
@@ -513,118 +531,59 @@ public class MultipleLongCommSubseq {
 
         if (DEBUG) {
             System.out.println("buildPaths - path node link complete");
-            for (List<PathNode> ls : foundNodePathFragments.get(sNode)) {
-                String debugStr = "";
-                for(PathNode pn : ls) {
-                    if (debugStr.length() > 0) {
-                        debugStr += ",";
+            if(foundNodePathFragments.get(sNode).size() < 100){
+                for (List<PathNode> ls : foundNodePathFragments.get(sNode)) {
+                    if (ls.size() < 100) {
+                        String debugStr = "";
+                        for(PathNode pn : ls) {
+                            if (debugStr.length() > 0) {
+                                debugStr += ",";
+                            }
+                            debugStr += pn.toString();
+                        }
+                        System.out.println(debugStr);
+                        System.out.println();    
                     }
-                    debugStr += pn.toString();
                 }
-                System.out.println(debugStr);
-                System.out.println();
+            } else {
+                System.out.println("Too many to list: " + foundNodePathFragments.get(sNode).size());
             }
         }
 
         List<List<String>> candidatesSet = new ArrayList<List<String>>();
+        long currentCount = 1L;
+        long maxCount = foundNodePathFragments.get(sNode).size();
+        if (maxCount > 10000) {
+            System.out.println("Cutting output in half because it's too large to be useable (" + maxCount + ")");
+            maxCount = Math.floorDiv(maxCount, 2);
+
+        }
         for (List<PathNode> ls : foundNodePathFragments.get(sNode)) {
-            PathNode prevNode = sNode;
-            PathNode nextNode = null;
-            List<String> candidateSet = new ArrayList<String>(Arrays.asList("", "", ""));
-            for(PathNode pn : ls) {
-                nextNode = pn;
-                candidateSet.set(0, candidateSet.get(0) + ((nextNode.getValues()[0] > prevNode.getValues()[0]) ? nucs.get(0)[prevNode.getValues()[0]] : skipChar));
-                candidateSet.set(1, candidateSet.get(1) + ((nextNode.getValues()[1] > prevNode.getValues()[1]) ? nucs.get(1)[prevNode.getValues()[1]] : skipChar));
-                candidateSet.set(2, candidateSet.get(2) + ((nextNode.getValues()[2] > prevNode.getValues()[2]) ? nucs.get(2)[prevNode.getValues()[2]] : skipChar));
-                prevNode = nextNode;
+            currentCount += 1;
+            if (currentCount < maxCount) {
+                if (TIMED_STATUS && (NEXT_INTERVAL < System.currentTimeMillis())) {
+                    System.out.println(Long.toString(System.currentTimeMillis()) + " " + Long.toString(System.currentTimeMillis() + SECONDS_CONST_15));
+                    System.out.println(String.format("timed alert - buld_paths - candidate sets: %d", currentCount));
+                    NEXT_INTERVAL = System.currentTimeMillis() + SECONDS_CONST_15;
+                }
+        
+                PathNode prevNode = sNode;
+                PathNode nextNode = null;
+                String cs1 = ""; String cs2 = ""; String cs3 = "";
+                for(PathNode pn : ls) {
+                    nextNode = pn;
+                    cs1 += (nextNode.getValues()[0] > prevNode.getValues()[0]) ? nucs.get(0)[prevNode.getValues()[0]] : skipChar;
+                    cs2 += (nextNode.getValues()[1] > prevNode.getValues()[1]) ? nucs.get(1)[prevNode.getValues()[1]] : skipChar;
+                    cs3 += (nextNode.getValues()[2] > prevNode.getValues()[2]) ? nucs.get(2)[prevNode.getValues()[2]] : skipChar;
+                    prevNode = nextNode;
+                }
+                List<String> candidateSet = new ArrayList<String>();
+                candidateSet.add(cs1); candidateSet.add(cs2); candidateSet.add(cs3);
+                candidatesSet.add(candidateSet);    
             }
-            candidatesSet.add(candidateSet);
         }
 
         return candidatesSet;
     }
 
-
-    public static List<List<String>> buildPathsNoRecurseBroken(Map<PathNode, List<PathNode>> existingPaths, List<String[]> nucs, PathNode startNode, Map<PathNode, List<List<String>>> foundPathFragments, int tabs) throws IllegalStateException {
-
-        Stack<List<Object>> loopStack = new Stack<List<Object>>();
-        String skipChar = "-";
-
-        List<Object> newStackFrame = new ArrayList<Object>();
-        
-        int[] endNodeIdx = new int[3];
-        endNodeIdx[0] = nucs.get(0).length; endNodeIdx[1] = nucs.get(1).length; endNodeIdx[2] = nucs.get(2).length;
-        PathNode endNode = new PathNode(endNodeIdx);
-        newStackFrame.add(endNode);
-        List<List<String>> startingPathsSet = new ArrayList<List<String>>();
-        List<String> paths = new ArrayList<String>(Arrays.asList("", "", ""));
-        startingPathsSet.add(paths);
-        newStackFrame.add(startingPathsSet);
-
-        loopStack.push(newStackFrame);
-
-        foundPathFragments.put(endNode, startingPathsSet);
-
-        while(!loopStack.empty()) {
-
-            List<Object> currentStackFrame = loopStack.pop();
-
-            PathNode currentNode = (PathNode) currentStackFrame.get(0);
-            List<List<String>> currentPaths = (List<List<String>>) currentStackFrame.get(1);
-
-            if (TIMED_STATUS && (NEXT_INTERVAL < System.currentTimeMillis())) {
-                System.out.println(Long.toString(System.currentTimeMillis()) + " " + Long.toString(System.currentTimeMillis() + SECONDS_CONST_15));
-                System.out.println(String.format("timed alert - buld_paths - node: %s", currentNode.toString()));
-                NEXT_INTERVAL = System.currentTimeMillis() + SECONDS_CONST_15;
-            }
-    
-    
-            for(PathNode nextNode : existingPaths.get(currentNode)) {
-                List<List<String>> nextNodePaths = new ArrayList<List<String>>();
-    
-                if(nextNode.getValues()[0] > currentNode.getValues()[0] || nextNode.getValues()[1] > currentNode.getValues()[1] && nextNode.getValues()[2] > currentNode.getValues()[2]) {
-                    throw new IllegalStateException(String.format("build_paths unexpected current_node %s = next_node %s.", currentNode.toString(), nextNode.toString()));
-                }
-                for(List<String> fragmentSet : currentPaths) {
-                    String s1 = (nextNode.getValues()[0] < currentNode.getValues()[0]) ? nucs.get(0)[currentNode.getValues()[0] - 1] : skipChar;
-                    String s2 = (nextNode.getValues()[1] < currentNode.getValues()[1]) ? nucs.get(1)[currentNode.getValues()[1] - 1] : skipChar;
-                    String s3 = (nextNode.getValues()[2] < currentNode.getValues()[2]) ? nucs.get(2)[currentNode.getValues()[2] - 1] : skipChar;
-                    List<String> newSet = new ArrayList<String>();
-                    newSet.add(s1 + fragmentSet.get(0));
-                    newSet.add(s2 + fragmentSet.get(1));
-                    newSet.add(s3 + fragmentSet.get(2));
-                    nextNodePaths.add(newSet);
-                }
-    
-                if (DEBUG) {
-                    System.out.println(currentNode.toString());
-                    System.out.println(nextNode.toString());
-                    for(List<String> ls : nextNodePaths) {
-                        for(String s : ls) {
-                            System.out.println(s);
-                        }
-                    }
-                }
-
-                if (foundPathFragments.containsKey(nextNode)) {
-                    for(List<String> pathsSet : nextNodePaths) {
-                        foundPathFragments.get(nextNode).add(pathsSet);
-                    }
-                } else {
-                    foundPathFragments.put(nextNode, nextNodePaths);
-                }
-
-                List<Object> nextStackFrame = new ArrayList<Object>();
-                nextStackFrame.add(nextNode);
-                nextStackFrame.add(nextNodePaths);
-                loopStack.push(nextStackFrame);
-            }
-        }
-
-        int[] startNodeIdx = new int[3];
-        startNodeIdx[0] = 0; startNodeIdx[1] = 0; startNodeIdx[2] = 0;
-        PathNode sNode = new PathNode(startNodeIdx);
-
-        return foundPathFragments.get(sNode);
-    }
 }
