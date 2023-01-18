@@ -45,6 +45,7 @@ public class Testing {
         nucs.add(seq3);
 
         MultipleLongCommSubseq mlcs = new MultipleLongCommSubseq();
+        mlcs.setVerbosity(false, false, false);
 
         List<Object> results = new ArrayList<Object>();
         try {
@@ -56,6 +57,8 @@ public class Testing {
     }
 
     private void fileBasedTest(String inFile, String assertFile) {
+        long startTime = System.currentTimeMillis();
+
         List<Object> results = initTestFromFile(inFile);
 
         int assertPathScore = -1;
@@ -89,6 +92,9 @@ public class Testing {
                     foundWinner = true;
         }
         assertTrue(foundWinner);
+
+        long endTime = System.currentTimeMillis();
+        System.out.println(String.format("Time: %d", (endTime-startTime) / 1000));
     }
 
     public void iterativeTestHarness(String fileId) {
