@@ -70,11 +70,6 @@ public class MultipleLongCommSubseq {
         int indelPenalty = 0;
         Scoring scoring = new Scoring(matchReward, mismatchPenalty, indelPenalty);
     
-        // Perform multiple sequence alignment
-        int[][][] score_keeper = new int[seq1.length + 1][seq2.length + 1][seq3.length + 1];
-        String[][][] incoming_direction_keeper = new String[seq1.length + 1][seq2.length + 1][seq3.length + 1];
-        Map<String, List<String>> existing_paths = new HashMap<>();
-
 // jbtest
 Map<List<Integer>, String> testMap = new HashMap<List<Integer>, String>();
 List<Integer> key1 = new ArrayList<Integer>(Arrays.asList(Integer.valueOf(8), Integer.valueOf(3), Integer.valueOf(100)));
@@ -133,11 +128,7 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
         DEBUG = debug;
     }
 
-    public static List<Object> findCommonSubseq(List<String[]> nucs, Scoring scoring) throws Exception, IllegalStateException {
-
-        List<List<List<Integer>>> scoreKeeper = new ArrayList<List<List<Integer>>>();
-        List<List<List<String>>> incomingDirectionKeeper = new ArrayList<List<List<String>>>();
-
+    public static void buildWorkingState(List<String[]> nucs, Scoring scoring, List<List<List<Integer>>> scoreKeeper, List<List<List<String>>> incomingDirectionKeeper) {
         for (int i = 0; i < nucs.get(0).length + 1; i++) {
             scoreKeeper.add(new ArrayList<List<Integer>>());
             incomingDirectionKeeper.add(new ArrayList<List<String>>());
@@ -198,8 +189,9 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
             System.out.println("prep");
             printSpace(scoreKeeper, incomingDirectionKeeper, nucs);
         }
+    }
 
-
+    public static void developWorkspace(List<String[]> nucs, Scoring scoring, List<List<List<Integer>>> scoreKeeper, List<List<List<String>>> incomingDirectionKeeper) {
         for(int i = 1; i < nucs.get(0).length + 1; i++) {
             for(int j = 1; j < nucs.get(1).length + 1; j++) {
                 for(int k = 1; k < nucs.get(2).length + 1; k++) {
@@ -247,43 +239,35 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
             System.out.println("complete");
             printSpace(scoreKeeper, incomingDirectionKeeper, nucs);
         }
+    }
+
+    public static List<Object> findCommonSubseq(List<String[]> nucs, Scoring scoring) throws Exception, IllegalStateException {
+
+
+        List<List<List<Integer>>> scoreKeeper = new ArrayList<List<List<Integer>>>();
+        List<List<List<String>>> incomingDirectionKeeper = new ArrayList<List<List<String>>>();
+
+        buildWorkingState(nucs, scoring, scoreKeeper, incomingDirectionKeeper);
+
+        developWorkspace(nucs, scoring, scoreKeeper, incomingDirectionKeeper);
 
         Map<PathNode, List<PathNode>> existingPaths = new HashMap<PathNode, List<PathNode>>();
 
-        walkBackwardsNoRecurse(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths);
-        // walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, nucs.get(0).length, nucs.get(1).length, nucs.get(2).length, 0);
+        walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths);
 
         if (DEBUG) {
             for(Map.Entry<PathNode, List<PathNode>> kvp : existingPaths.entrySet()) {
                 System.out.println(kvp.getKey().toString() + kvp.getValue().toString());
             }
         }
+        
+        List<List<PathNode>> candidatePaths = buildPaths(existingPaths, nucs);
 
-        // for (int i = 0; i < 5; i++) {
-        //     System.out.println();
-        // }
-        
-        // System.out.println("score: " + scoreKeeper.get(nucs.get(0).length).get(nucs.get(1).length).get(nucs.get(2).length));
-    
-        // for (int i = 0; i < 5; i++) {
-        //     System.out.println();
-        // }
-        
-        // List<List<String>> candidates = buildPaths(existinPaths, nucs, [], (), {}, 0);
-        int[] zeroIdx = new int[3];
-        zeroIdx[0] = 0; zeroIdx[1] = 0; zeroIdx[2] = 0;
-        PathNode zeroNode = new PathNode(zeroIdx);
-        Map<PathNode, List<List<String>>> foundPathFragments = new HashMap<PathNode, List<List<String>>>();
-        List<List<String>> candidates = buildPathsNoRecurse(existingPaths, nucs, zeroNode, foundPathFragments, 0);
+        List<List<String>> candidates = buildCandidateSets(candidatePaths, nucs);
 
         if (DEBUG) {
             System.out.println("candidates");
             System.out.println(candidates.size());
-            // for(List<String> candidateSet : candidates) {
-            //     for(String candidateElement : candidateSet) {
-            //         System.out.println(candidateElement);
-            //     }
-            // }
         }
 
         int finalScore = scoreKeeper.get(nucs.get(0).length).get(nucs.get(1).length).get(nucs.get(2).length);
@@ -294,10 +278,9 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
 
         return results;
     
-    // candidates = build_paths(existing_paths, nucs, ["","",""], (0,0,0), {}, 0)
     }
 
-    public static void walkBackwardsNoRecurse(List<List<List<Integer>>> scoreKeeper, List<List<List<String>>> incomingDirectionKeeper, List<String[]> nucs, Map<PathNode, List<PathNode>> existingPaths) throws Exception, IllegalStateException {
+    public static void walkBackwards(List<List<List<Integer>>> scoreKeeper, List<List<List<String>>> incomingDirectionKeeper, List<String[]> nucs, Map<PathNode, List<PathNode>> existingPaths) throws Exception, IllegalStateException {
 
         Stack<List<Object>> loopStack = new Stack<List<Object>>();
 
@@ -389,18 +372,12 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
 
                 List<Object> nextStackFrame = new ArrayList<Object>();
 
-                // loopStack.push(followIdx);
-                // walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, followIdx[0], followIdx[1], followIdx[2], tabs+1);
-                // PathNode curNode = new PathNode(followIdx);        
-                // System.out.println("in loop " + Arrays.toString(prevNodeIdx));
                 nextStackFrame.add(prevNodeIdx);
                 tabs += 1;
                 nextStackFrame.add(tabs);
                 nextStackFrame.add(myNode);
                 loopStack.push(nextStackFrame);
 
-                // existingPaths.get(curNode).add(myNode);
-    
             }
 
             if (!existingPaths.containsKey(myNode)) {
@@ -464,11 +441,9 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
 
     }
 
-    public static List<List<String>> buildPathsNoRecurse(Map<PathNode, List<PathNode>> existingPaths, List<String[]> nucs, PathNode startNode, Map<PathNode, List<List<String>>> foundPathFragments, int tabs) throws IllegalStateException {
+    public static List<List<PathNode>> buildPaths(Map<PathNode, List<PathNode>> existingPaths, List<String[]> nucs) throws IllegalStateException {
 
         Stack<List<Object>> loopStack = new Stack<List<Object>>();
-        String skipChar = "-";
-
         List<Object> newStackFrame = new ArrayList<Object>();
         
         int[] endNodeIdx = new int[3];
@@ -484,6 +459,9 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
         foundNodePathFragments.put(endNode, nodePathFragmentsSet);
         newStackFrame.add(nodePathFragmentsSet);
 
+        Integer starttabs = 0;
+        newStackFrame.add(starttabs);
+
         loopStack.push(newStackFrame);
 
         while(!loopStack.empty()) {
@@ -491,10 +469,11 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
 
             PathNode currentNode = (PathNode) currentStackFrame.get(0);
             List<List<PathNode>> currentNodePathFragmentsSet = (List<List<PathNode>>) currentStackFrame.get(1);
+            Integer tabs = (Integer) currentStackFrame.get(2);
 
             if (TIMED_STATUS && (NEXT_INTERVAL < System.currentTimeMillis())) {
-                System.out.println(Long.toString(System.currentTimeMillis()) + " " + Long.toString(System.currentTimeMillis() + SECONDS_CONST_15));
-                System.out.println(String.format("timed alert - buld_paths - node: %s", currentNode.toString()));
+                System.out.println(new String(new char[tabs]).replace("\0", " ") + Long.toString(System.currentTimeMillis()) + " " + Long.toString(System.currentTimeMillis() + SECONDS_CONST_15));
+                System.out.println(new String(new char[tabs]).replace("\0", " ") + String.format("timed alert - buld_paths - node: %s", currentNode.toString()));
                 NEXT_INTERVAL = System.currentTimeMillis() + SECONDS_CONST_15;
             }
     
@@ -525,6 +504,8 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
                 List<Object> nextStackFrame = new ArrayList<Object>();
                 nextStackFrame.add(nextNode);
                 nextStackFrame.add(nextPathNodePaths);
+                tabs += 1;
+                nextStackFrame.add(tabs);
                 loopStack.push(nextStackFrame);
             }
         }
@@ -554,15 +535,28 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
             }
         }
 
+        return foundNodePathFragments.get(sNode);
+    }
+
+
+    public static List<List<String>> buildCandidateSets(List<List<PathNode>> fullNodePaths, List<String[]> nucs) throws IllegalStateException {
+
+
+        int[] startNodeIdx = new int[3];
+        startNodeIdx[0] = 0; startNodeIdx[1] = 0; startNodeIdx[2] = 0;
+        PathNode sNode = new PathNode(startNodeIdx);
+
+        String skipChar = "-";
+
         List<List<String>> candidatesSet = new ArrayList<List<String>>();
         long currentCount = 0L;
-        long maxCount = foundNodePathFragments.get(sNode).size() + 1;
+        long maxCount = fullNodePaths.size() + 1;
         if (maxCount > 10000000) {
             System.out.println("Cutting output in half because it's too large to be useable (" + maxCount + ")");
             maxCount = Math.floorDiv(maxCount, 2);
 
         }
-        for (List<PathNode> ls : foundNodePathFragments.get(sNode)) {
+        for (List<PathNode> ls : fullNodePaths) {
             currentCount += 1;
             if (currentCount < maxCount) {
                 if (TIMED_STATUS && (NEXT_INTERVAL < System.currentTimeMillis())) {
