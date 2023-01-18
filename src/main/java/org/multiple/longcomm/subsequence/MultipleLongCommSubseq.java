@@ -250,7 +250,7 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
 
         Map<PathNode, List<PathNode>> existingPaths = new HashMap<PathNode, List<PathNode>>();
 
-        walkBackwardsNoRecurse(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, nucs.get(0).length, nucs.get(1).length, nucs.get(2).length, 0);
+        walkBackwardsNoRecurse(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths);
         // walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths, nucs.get(0).length, nucs.get(1).length, nucs.get(2).length, 0);
 
         if (DEBUG) {
@@ -297,20 +297,22 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
     // candidates = build_paths(existing_paths, nucs, ["","",""], (0,0,0), {}, 0)
     }
 
-    public static void walkBackwardsNoRecurse(List<List<List<Integer>>> scoreKeeper, List<List<List<String>>> incomingDirectionKeeper, List<String[]> nucs, Map<PathNode, List<PathNode>> existingPaths, int i, int j, int k, int tabs) throws Exception, IllegalStateException {
+    public static void walkBackwardsNoRecurse(List<List<List<Integer>>> scoreKeeper, List<List<List<String>>> incomingDirectionKeeper, List<String[]> nucs, Map<PathNode, List<PathNode>> existingPaths) throws Exception, IllegalStateException {
 
         Stack<List<Object>> loopStack = new Stack<List<Object>>();
 
         List<Object> newStackFrame = new ArrayList<Object>();        
         int[] initNodeIdx = new int[3];
-        initNodeIdx[0] = i; initNodeIdx[1] = j; initNodeIdx[2] = k;
+        initNodeIdx[0] = nucs.get(0).length; initNodeIdx[1] = nucs.get(1).length; initNodeIdx[2] = nucs.get(2).length;
         newStackFrame.add(initNodeIdx);
+        newStackFrame.add(Integer.valueOf(0));
         
         loopStack.push(newStackFrame);
 
         while (!loopStack.empty()) {
             List<Object> currentStackFrame = loopStack.pop();
             int[] loopNodeIdx = (int[]) currentStackFrame.get(0);
+            Integer tabs = (Integer) currentStackFrame.get(1);
 
             if (loopNodeIdx[0] < 0 || loopNodeIdx[1] < 0 || loopNodeIdx[2] < 0) {
                 throw new Exception("  " + new String(new char[tabs]).replace("\0", " ") + "invalid value: " + Arrays.toString(loopNodeIdx));    
@@ -325,7 +327,7 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
             }
     
             if (existingPaths.containsKey(myNode)) {
-                PathNode followNode = (PathNode) currentStackFrame.get(1);
+                PathNode followNode = (PathNode) currentStackFrame.get(2);
                 if (!existingPaths.get(followNode).contains(myNode)) {
                     existingPaths.get(followNode).add(myNode);
                 }
@@ -340,7 +342,7 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
                 }
 
                 try {
-                    PathNode followNode = (PathNode) currentStackFrame.get(1);
+                    PathNode followNode = (PathNode) currentStackFrame.get(2);
                     existingPaths.get(followNode).add(myNode);
                 } catch (IndexOutOfBoundsException e) {
                     int ij = 0;
@@ -392,6 +394,8 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
                 // PathNode curNode = new PathNode(followIdx);        
                 // System.out.println("in loop " + Arrays.toString(prevNodeIdx));
                 nextStackFrame.add(prevNodeIdx);
+                tabs += 1;
+                nextStackFrame.add(tabs);
                 nextStackFrame.add(myNode);
                 loopStack.push(nextStackFrame);
 
@@ -404,7 +408,7 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
             }
 
             try {
-                PathNode followNode = (PathNode) currentStackFrame.get(1);
+                PathNode followNode = (PathNode) currentStackFrame.get(2);
                 existingPaths.get(followNode).add(myNode);
             } catch (IndexOutOfBoundsException e) {
                 int ij = 0;
@@ -551,9 +555,9 @@ for(Map.Entry<List<Integer>, String> kvp : testMap.entrySet()) {
         }
 
         List<List<String>> candidatesSet = new ArrayList<List<String>>();
-        long currentCount = 1L;
-        long maxCount = foundNodePathFragments.get(sNode).size();
-        if (maxCount > 10000) {
+        long currentCount = 0L;
+        long maxCount = foundNodePathFragments.get(sNode).size() + 1;
+        if (maxCount > 10000000) {
             System.out.println("Cutting output in half because it's too large to be useable (" + maxCount + ")");
             maxCount = Math.floorDiv(maxCount, 2);
 
