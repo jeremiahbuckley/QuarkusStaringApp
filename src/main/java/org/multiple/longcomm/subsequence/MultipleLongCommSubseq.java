@@ -7,10 +7,14 @@ import java.util.Map;
 import java.util.List;
 import java.util.HashMap;
 import java.lang.Math;
+import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Stack;
+
+import javax.naming.SizeLimitExceededException;
+
 import java.lang.IllegalStateException;
 
 
@@ -25,22 +29,18 @@ public class MultipleLongCommSubseq {
         long startTime = System.currentTimeMillis();
         NEXT_INTERVAL = startTime + SECONDS_CONST_15;
 
-        String nuc1 = "";
-        String nuc2 = "";
-        String nuc3 = "";
+        List<String[]> nucs = new ArrayList<String[]>();
         try {
             File file = new File(args[0]);
             Scanner sc = new Scanner(file);
-            nuc1 = sc.nextLine();
-            nuc2 = sc.nextLine();
-            nuc3 = sc.nextLine();
-            sc.close();
+            while (sc.hasNext()) {
+                nucs.add(sc.next().split(""));
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+        } finally {
+            sc.close();
         }
-        String[] seq1 = nuc1.split("");
-        String[] seq2 = nuc2.split("");
-        String[] seq3 = nuc3.split("");
 
 
         for(int i=1; i < args.length; i++) {
@@ -60,9 +60,34 @@ public class MultipleLongCommSubseq {
         }
 
         if (VERBOSE) {
-            System.out.println(Arrays.toString(seq1));
-            System.out.println(Arrays.toString(seq2));
-            System.out.println(Arrays.toString(seq3));
+            for (String[] n : nucs) {
+                System.out.println(n.toString());
+            }
+        }
+
+
+        // testing some stuff
+        if (false) {
+            try {
+                MultiDimensionalArray<Integer> mda1 = new MultiDimensionalArray<>(Integer.valueOf(0), Arrays.asList(5, 6, 3, 1, 2, 5));
+                mda1.toString();
+                List<List<Boolean>> allDirs = null;
+                try {
+                    allDirs = MultiDimensionalArray.generatePossibleDirections(6);
+                } catch (InvalidKeyException e) {
+                    throw new SizeLimitExceededException("too many dimensions");
+                }
+                MultiDimensionalArray<List<List<Boolean>>> mda2 = new MultiDimensionalArray<>(allDirs, Arrays.asList(5, 6, 3, 1, 2, 5));
+                mda2.toString();
+            } catch (SizeLimitExceededException e) {
+                System.out.print(e);
+            }
+    
+            int a = 1;
+            int b = 0;
+            int c = a/b;
+    
+    
         }
 
         int matchReward = 1;
@@ -70,17 +95,11 @@ public class MultipleLongCommSubseq {
         int indelPenalty = 0;
         Scoring scoring = new Scoring(matchReward, mismatchPenalty, indelPenalty);
 
-        List<String[]> nucs = new ArrayList<String[]>();
-        nucs.add(seq1);
-        nucs.add(seq2);
-        nucs.add(seq3);
-
         List<Object> results = new ArrayList<Object>();
         try {
             results = findCommonSubseq(nucs, scoring);
         } catch (Exception e) {
-            System.out.print(e.getStackTrace());
-            System.out.print(e.getMessage());
+            System.out.print(e);
         }
         int resultsScore = (int) results.get(0);
         List<List<String>> resultsCandidates = (List<List<String>>) results.get(1);
@@ -124,6 +143,70 @@ public class MultipleLongCommSubseq {
         }
         return node;
     }
+
+    public static void buildWorkingStateMDA(List<String[]> nucs, Scoring scoring, List<List<List<Integer>>> scoreKeeper, List<List<List<String>>> incomingDirectionKeeper) {
+        for (int i = 0; i < nucs.get(0).length + 1; i++) {
+            scoreKeeper.add(new ArrayList<List<Integer>>());
+            incomingDirectionKeeper.add(new ArrayList<List<String>>());
+            for (int j = 0; j < nucs.get(1).length + 1; j++) {
+                scoreKeeper.get(i).add(new ArrayList<Integer>());
+                incomingDirectionKeeper.get(i).add(new ArrayList<String>());
+                for (int k = 0; k < nucs.get(2).length + 1; k++) {
+                    scoreKeeper.get(i).get(j).add(Integer.MIN_VALUE);
+                    incomingDirectionKeeper.get(i).get(j).add("*");
+                }
+            }
+        }
+
+        for (int i = 0; i < nucs.get(0).length + 1; i++) {
+            for (int j = 0; j < nucs.get(1).length + 1; j++) {
+                scoreKeeper.get(i).get(j).set(0, scoring.getIndelPenalty());
+                if (i == 0 && j == 0) {
+                    incomingDirectionKeeper.get(i).get(j).set(0,"-");
+                } else if (i > 0 && j == 0) {
+                    incomingDirectionKeeper.get(i).get(j).set(0,"6");
+                } else if (i == 0 && j > 0) {
+                    incomingDirectionKeeper.get(i).get(j).set(0,"4");
+                } else {
+                    incomingDirectionKeeper.get(i).get(j).set(0,"246");
+                }
+            }
+        }
+        for (int i = 0; i < nucs.get(1).length + 1; i++) {
+            for (int j = 0; j < nucs.get(2).length + 1; j++) {
+                scoreKeeper.get(0).get(i).set(j, scoring.getIndelPenalty());
+                if (i == 0 && j == 0) {
+                    incomingDirectionKeeper.get(0).get(i).set(j,"-");
+                } else if (i > 0 && j == 0) {
+                    incomingDirectionKeeper.get(0).get(i).set(j,"4");
+                } else if (i == 0 && j > 0) {
+                    incomingDirectionKeeper.get(0).get(i).set(j,"7");
+                } else {
+                    incomingDirectionKeeper.get(0).get(i).set(j,"347");
+                }
+            }
+        }
+        for (int i = 0; i < nucs.get(0).length + 1; i++) {
+            for (int j = 0; j < nucs.get(2).length + 1; j++) {
+                scoreKeeper.get(i).get(0).set(j, scoring.getIndelPenalty());
+                if (i == 0 && j == 0) {
+                    incomingDirectionKeeper.get(i).get(0).set(j,"-");
+                } else if (i > 0 && j == 0) {
+                    incomingDirectionKeeper.get(i).get(0).set(j,"6");
+                } else if (i == 0 && j > 0) {
+                    incomingDirectionKeeper.get(i).get(0).set(j,"7");
+                } else {
+                    incomingDirectionKeeper.get(i).get(0).set(j,"567");
+                }
+            }
+        }
+
+        if (VERBOSE) {
+            System.out.println("prep");
+            printSpace(scoreKeeper, incomingDirectionKeeper, nucs);
+        }
+    }
+
 
     public static void buildWorkingState(List<String[]> nucs, Scoring scoring, List<List<List<Integer>>> scoreKeeper, List<List<List<String>>> incomingDirectionKeeper) {
         for (int i = 0; i < nucs.get(0).length + 1; i++) {
@@ -253,7 +336,7 @@ public class MultipleLongCommSubseq {
         try {
             walkBackwards(scoreKeeper, incomingDirectionKeeper, nucs, existingPaths);
         } catch (Exception e) {
-            System.out.print(e.getStackTrace());
+            System.out.print(e);
             throw e;
         }
 
@@ -267,7 +350,7 @@ public class MultipleLongCommSubseq {
         try {
             candidatePaths = buildPaths(existingPaths, nucs);
         } catch (Exception e) {
-            System.out.print(e.getStackTrace());
+            System.out.print(e);
             throw e;
         }
 
@@ -275,7 +358,7 @@ public class MultipleLongCommSubseq {
         try {
             candidates = buildCandidateSets(candidatePaths, nucs);
         } catch (Exception e) {
-            System.out.print(e.getStackTrace());
+            System.out.print(e);
             throw e;
         }
 
@@ -416,6 +499,16 @@ public class MultipleLongCommSubseq {
         }
         return;
     }
+
+    public static void printSpaceMDA(MultiDimensionalArray<Integer> scoreKeeper, MultiDimensionalArray<List<Boolean>> incomingDirectionKeeper) {
+
+        System.out.println(scoreKeeper.toString());
+        System.out.println();
+        System.out.println(incomingDirectionKeeper.toString());
+        System.out.println();
+
+    }
+
 
     public static void printSpace(List<List<List<Integer>>> scoreKeeper, List<List<List<String>>> incomingDirectionKeeper, List<String[]> nucs) {
         String str1 = "";
