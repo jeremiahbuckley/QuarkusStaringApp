@@ -24,21 +24,30 @@ public class MultiDimensionalArray<T> {
     Map<List<Integer>, T> dimensionSpace = new HashMap<List<Integer>, T>();
 
     public IndexIterator<T> reverseIndexIterator = null;
+    public IndexIterator<T> forwardIndexIterator = null;
 
     public class IndexIterator<T> implements Iterable<List<Integer>> {
 
         MultiDimensionalArray<T> mda = null;
         T t;
+        Boolean reverse;
 
-        public IndexIterator(T t, MultiDimensionalArray mda) {
+        public IndexIterator(T t, MultiDimensionalArray mda, Boolean reverse) {
             this.mda = mda;
+            this.reverse = reverse;
         }
 
         @Override
         public Iterator<List<Integer>> iterator() {
-            BackwardsIterator<T> myIterator = new BackwardsIterator<T>(this.t, this.mda);
-            return myIterator;
+            if (!reverse) {
+                ForwardIterator<T> myIterator = new ForwardIterator<T>(this.t, this.mda);
+                return myIterator;
+            } else {
+                BackwardsIterator<T> myIterator = new BackwardsIterator<T>(this.t, this.mda);
+                return myIterator;
+            }
         }
+
         public class BackwardsIterator<E> implements Iterator<List<Integer>> {
 
             List<Integer> idx = new ArrayList<>();
@@ -93,6 +102,62 @@ public class MultiDimensionalArray<T> {
                 return next;
             }
         }
+        public class ForwardIterator<E> implements Iterator<List<Integer>> {
+
+            List<Integer> idx = new ArrayList<>();
+            List<Integer> max = new ArrayList<>();
+            MultiDimensionalArray<E> mda = null;
+            Boolean reachedMax = false;
+
+
+            public ForwardIterator(E e, MultiDimensionalArray<E> incommingmda) {
+                this.mda = incommingmda;
+                
+                for(int i = 0; i < this.mda.dimensionSizes.size(); i++) {
+                    idx.add(0);
+                    max.add(dimensionSizes.get(i));
+                }    
+
+                System.out.println("hi " + idx.toString() + " " + max.toString());
+            }
+
+            @Override
+            public boolean hasNext() {
+                return !reachedMax;
+            }
+
+            @Override
+            public List<Integer> next() throws NoSuchElementException {
+                if (reachedMax) {
+                    throw new NoSuchElementException();
+                }
+
+                List<Integer> next = new ArrayList<>();
+                for(int i: idx) {
+                    next.add(i);
+                }
+                if (idx.equals(max)) {
+                    reachedMax = true;
+                }
+        
+                Boolean iteratedOneDigit = false;
+                for (int digit = dimensionSizes.size() - 1; digit >= 0; digit-- ){
+                    if (!iteratedOneDigit) {
+                        if (idx.get(digit) < dimensionSizes.get(digit)) {
+                            idx.set(digit, idx.get(digit)+1);
+                            for(int remainder = digit+1; remainder < dimensionSizes.size(); remainder++) {
+                                idx.set(remainder, 0);
+                            }    
+                            iteratedOneDigit = true;
+                        }
+                    }
+                }
+
+                return next;
+            }
+        }
+
+
     }
 
     MultiDimensionalArray(T t, int[] sizes) throws SizeLimitExceededException {
@@ -141,7 +206,8 @@ public class MultiDimensionalArray<T> {
         this.dimensions = sizes.size();
         this.dimensionSizes = new ArrayList<Integer>();
         int maxSizeCheck = 0;
-        this.reverseIndexIterator = new IndexIterator(t, this);
+        this.reverseIndexIterator = new IndexIterator(t, this, true);
+        this.forwardIndexIterator = new IndexIterator(t, this, false);
 
         for (int val : sizes) {
             dimensionSizes.add(val);
@@ -201,94 +267,77 @@ public class MultiDimensionalArray<T> {
         return this.t;
     }
 
+    public List<Integer> firstIndex() {
+        List<Integer> idx = new ArrayList<Integer>();
+        for(Integer d : dimensionSizes) {
+            idx.add(0);
+        }
+        return idx;
+    }
+
+    public List<Integer> lastIndex() {
+        List<Integer> idx = new ArrayList<Integer>();
+        for(Integer d : dimensionSizes) {
+            idx.add(d);
+        }
+        return idx;
+    }
+
     public String toString() {
         String output = "";
+        String tabChar = " ";
+        String gridDelimiter = " ";
 
-
-        List<Integer> idx = new ArrayList<>();
-        List<Integer> max = new ArrayList<>();
-        String gridTab = new String(new char[dimensionSizes.size()-2]).replace("\0", " ") ;
+        List<Integer> truncatedIdx = new ArrayList<Integer>();
         for(int i = 0; i < dimensionSizes.size()-2; i++) {
-            idx.add(0);
-            max.add(dimensionSizes.get(i)-1);
+            truncatedIdx.add(-1);
         }
 
-        if (dimensionSizes.size() == 2)
-        {
-            String grid = "";
-            for (int j = 0; j < dimensionSizes.get(dimensionSizes.size()-2) + 1; j++) {
-                String gridline = "";
-                for(int k = 0; k < dimensionSizes.get(dimensionSizes.size()-1) + 1; k++) {
-                    List<Integer> midx = new ArrayList<Integer>();
-                    midx.addAll(idx); midx.add(j); midx.add(k);
-                    if (gridline.length() > 0) {
-                        gridline += " ";
-                    }
-                    gridline = gridline + dimensionSpace.get(midx).toString();
+        Integer d2idx = -1;
+        String gridRow = "";
+        for(List<Integer> idx : forwardIndexIterator) {
+            List<Integer> idxTrunk = new ArrayList<Integer>();
+            if (idx.size() > 2) {
+                for (int i = 0; i < idx.size()-2; i++) {
+                    idxTrunk.add(idx.get(i));
                 }
-                gridline += "\n";
-                grid += gridTab + gridline;
             }
-            grid += "\n";
+            Boolean lastTwoDimensions = (idx.size() == 2 || idxTrunk.equals(truncatedIdx));
 
-            // System.out.println(grid);
-            output += grid;
-
-        } else {
-
-            List<Integer> idxprinted = new ArrayList<>();
-            for(int idxprint = 0; idxprint < dimensionSizes.size() -2; idxprint++) {
-                idxprinted.add(0);
-            }
-            while(!idx.equals(max)) {
-
-                for(int idxprint = 0; idxprint < dimensionSizes.size()-2; idxprint++) {
-                    if (idxprinted.get(idxprint) == idx.get(idxprint) ) {
-                        // System.out.println(new String(new char[idxprint]).replace("\0", " ") + idx.get(idxprint).toString());
-                        output += new String(new char[idxprint]).replace("\0", " ") + idx.get(idxprint).toString();
-                        idxprinted.set(idxprint, idxprinted.get(idxprint) + 1);
-                        for(int i2 =idxprint+1; i2 < dimensionSizes.size()-2; i2++) {
-                            idxprinted.set(i2, 0);
-                        }
-
+            if (!lastTwoDimensions) {
+                Boolean advancedHigherDimensions = false;
+                String hlevel = "";
+                for(int tdi = 0; tdi < idxTrunk.size(); tdi++) {
+                    if (!idxTrunk.get(tdi).equals(truncatedIdx.get(tdi))) {
+                        hlevel += new String(new char[tdi]).replace("\0", tabChar) + idxTrunk.get(tdi) + "\n";
+                        advancedHigherDimensions = true;
                     }
                 }
+                if (advancedHigherDimensions) {
+                    truncatedIdx = idxTrunk;
 
-                // System.out.println(idx.toString() + " " + max.toString());
-
-                String grid = "";
-                for (int j = 0; j < dimensionSizes.get(dimensionSizes.size()-2) + 1; j++) {
-                    String gridline = "";
-                    for(int k = 0; k < dimensionSizes.get(dimensionSizes.size()-1) + 1; k++) {
-                        List<Integer> midx = new ArrayList<Integer>();
-                        midx.addAll(idx); midx.add(j); midx.add(k);
-                        if (gridline.length() > 0) {
-                            gridline += " ";
-                        }
-                        gridline = gridline + dimensionSpace.get(midx).toString();
-                    }
-                    gridline += "\n";
-                    grid += gridTab + gridline;
+                    output += gridRow + "\n";
+                    gridRow = new String(new char[truncatedIdx.size()]).replace("\0", tabChar) + dimensionSpace.get(idx).toString();
+                    d2idx = idx.get(idx.size()-2);
+                    output += hlevel;
+                    hlevel = "";
                 }
-                grid += "\n";
-
-                // System.out.println(grid);
-                output += grid;
-
-                Boolean incrementOne = false;
-                for (int digit = dimensionSizes.size() - 3; digit >= 0; digit-- ){
-                    if (!incrementOne) {
-                        if (idx.get(digit) < dimensionSizes.get(digit)-1) {
-                            idx.set(digit, idx.get(digit)+1);
-                            for(int remainder = digit+1; remainder < dimensionSizes.size() - 3; remainder++) {
-                                idx.set(remainder, 0);
-                            }    
-                            incrementOne = true;
-                        }
+            } else {
+                if (d2idx != idx.get(idx.size()-2)) {
+                    output += gridRow + "\n";
+                    gridRow = new String(new char[truncatedIdx.size()]).replace("\0", tabChar) + dimensionSpace.get(idx).toString();
+                    d2idx = idx.get(idx.size()-2);
+                } else {
+                    if (gridRow.length() > 0) {
+                        gridRow += gridDelimiter;
                     }
+                    gridRow += dimensionSpace.get(idx).toString();
                 }
             }
         }
+        output += gridRow + "\n";
+
+
 
         return output;
     }
