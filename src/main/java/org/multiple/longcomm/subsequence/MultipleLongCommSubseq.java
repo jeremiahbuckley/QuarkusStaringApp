@@ -30,9 +30,10 @@ public class MultipleLongCommSubseq {
         NEXT_INTERVAL = startTime + SECONDS_CONST_15;
 
         List<String[]> nucs = new ArrayList<String[]>();
+        Scanner sc = null;
         try {
             File file = new File(args[0]);
-            Scanner sc = new Scanner(file);
+            sc = new Scanner(file);
             while (sc.hasNext()) {
                 nucs.add(sc.next().split(""));
             }
@@ -61,27 +62,82 @@ public class MultipleLongCommSubseq {
 
         if (VERBOSE) {
             for (String[] n : nucs) {
-                System.out.println(n.toString());
+                System.out.println(Arrays.toString(n));
             }
         }
 
+        int matchReward = 1;
+        int mismatchPenalty = 0;
+        int indelPenalty = 0;
+        Scoring scoring = new Scoring(matchReward, mismatchPenalty, indelPenalty);
+
 
         // testing some stuff
-        if (false) {
+        if (true) {
+            MultiDimensionalArray<Integer> scoreKeeperMDA = null;
+            MultiDimensionalArray<List<List<Boolean>>> incomingDirectionKeeperMDA = null;
             try {
-                MultiDimensionalArray<Integer> mda1 = new MultiDimensionalArray<>(Integer.valueOf(0), Arrays.asList(5, 6, 3, 1, 2, 5));
-                mda1.toString();
+                // scoreKeeperMDA = new MultiDimensionalArray<>(Integer.MIN_VALUE, Arrays.asList(5, 6, 3, 1, 2, 5));
+                scoreKeeperMDA = new MultiDimensionalArray<>(Integer.MIN_VALUE, Arrays.asList(2, 1, 2));
+                System.out.print(scoreKeeperMDA.toString());
                 List<List<Boolean>> allDirs = null;
                 try {
                     allDirs = MultiDimensionalArray.generatePossibleDirections(6);
                 } catch (InvalidKeyException e) {
                     throw new SizeLimitExceededException("too many dimensions");
                 }
-                MultiDimensionalArray<List<List<Boolean>>> mda2 = new MultiDimensionalArray<>(allDirs, Arrays.asList(5, 6, 3, 1, 2, 5));
-                mda2.toString();
+                // incomingDirectionKeeperMDA = new MultiDimensionalArray<>(allDirs, Arrays.asList(5, 6, 3, 1, 2, 5));
+                incomingDirectionKeeperMDA = new MultiDimensionalArray<>(allDirs, Arrays.asList(2, 1, 2));
+                System.out.print(incomingDirectionKeeperMDA.toString());
             } catch (SizeLimitExceededException e) {
                 System.out.print(e);
             }
+
+            buildWorkingStateMDA(nucs, scoring, scoreKeeperMDA, incomingDirectionKeeperMDA);
+
+            System.out.println("foo");
+            for(List<Integer> idx : incomingDirectionKeeperMDA.reverseIndexIterator) {
+                System.out.println(idx.toString());
+                int nzCount = 0;
+                for(int d : idx) {
+                    if (d != 0) {
+                        nzCount++;
+                    }
+                }
+                int nzFound = 0;
+                List<List<Boolean>> dirAvailable = new ArrayList<List<Boolean>>();
+                // note: not Math.pow(2, nzCount) - 1, the total list is 2^n-1, so , have to do -2 for the cycle control
+                for(int i = 0; i < Math.pow(2, nzCount) -1; i++) {
+                    dirAvailable.add(new ArrayList<Boolean>());
+                }
+
+                for(int d : idx) {
+                    if (d == 0) {
+                        for(List<Boolean> lb : dirAvailable) {
+                            lb.add(false);
+                        }
+                    } else {
+                        int cycle = (int)Math.round(Math.pow(2, (nzCount-nzFound)));
+                        int halfcycle = cycle / 2;
+                        int cLoc = 1; // note: not Zero, start one-up on the cylce
+                        for(int i = 0; i < dirAvailable.size(); i++) {
+                            Boolean dv = (cLoc < halfcycle) ? false : true;
+                            dirAvailable.get(i).add(dv);
+                            cLoc = (cLoc + 1) % cycle;
+                        }
+                        nzFound++;
+                    }
+                }
+
+                List<List<Boolean>> copyToDirAvailable = new ArrayList<List<Boolean>>();
+                for(List<Boolean> da : dirAvailable) {
+                    copyToDirAvailable.add(da);
+                }
+
+                incomingDirectionKeeperMDA.put(idx, copyToDirAvailable);
+            }
+            System.out.print(incomingDirectionKeeperMDA.toString()); 
+            System.out.println("bar");
     
             int a = 1;
             int b = 0;
@@ -89,11 +145,6 @@ public class MultipleLongCommSubseq {
     
     
         }
-
-        int matchReward = 1;
-        int mismatchPenalty = 0;
-        int indelPenalty = 0;
-        Scoring scoring = new Scoring(matchReward, mismatchPenalty, indelPenalty);
 
         List<Object> results = new ArrayList<Object>();
         try {
@@ -144,67 +195,55 @@ public class MultipleLongCommSubseq {
         return node;
     }
 
-    public static void buildWorkingStateMDA(List<String[]> nucs, Scoring scoring, List<List<List<Integer>>> scoreKeeper, List<List<List<String>>> incomingDirectionKeeper) {
-        for (int i = 0; i < nucs.get(0).length + 1; i++) {
-            scoreKeeper.add(new ArrayList<List<Integer>>());
-            incomingDirectionKeeper.add(new ArrayList<List<String>>());
-            for (int j = 0; j < nucs.get(1).length + 1; j++) {
-                scoreKeeper.get(i).add(new ArrayList<Integer>());
-                incomingDirectionKeeper.get(i).add(new ArrayList<String>());
-                for (int k = 0; k < nucs.get(2).length + 1; k++) {
-                    scoreKeeper.get(i).get(j).add(Integer.MIN_VALUE);
-                    incomingDirectionKeeper.get(i).get(j).add("*");
-                }
-            }
-        }
+    public static void buildWorkingStateMDA(List<String[]> nucs, Scoring scoring, MultiDimensionalArray scoreKeeper, MultiDimensionalArray incomingDirectionKeeper) {
 
-        for (int i = 0; i < nucs.get(0).length + 1; i++) {
-            for (int j = 0; j < nucs.get(1).length + 1; j++) {
-                scoreKeeper.get(i).get(j).set(0, scoring.getIndelPenalty());
-                if (i == 0 && j == 0) {
-                    incomingDirectionKeeper.get(i).get(j).set(0,"-");
-                } else if (i > 0 && j == 0) {
-                    incomingDirectionKeeper.get(i).get(j).set(0,"6");
-                } else if (i == 0 && j > 0) {
-                    incomingDirectionKeeper.get(i).get(j).set(0,"4");
-                } else {
-                    incomingDirectionKeeper.get(i).get(j).set(0,"246");
-                }
-            }
-        }
-        for (int i = 0; i < nucs.get(1).length + 1; i++) {
-            for (int j = 0; j < nucs.get(2).length + 1; j++) {
-                scoreKeeper.get(0).get(i).set(j, scoring.getIndelPenalty());
-                if (i == 0 && j == 0) {
-                    incomingDirectionKeeper.get(0).get(i).set(j,"-");
-                } else if (i > 0 && j == 0) {
-                    incomingDirectionKeeper.get(0).get(i).set(j,"4");
-                } else if (i == 0 && j > 0) {
-                    incomingDirectionKeeper.get(0).get(i).set(j,"7");
-                } else {
-                    incomingDirectionKeeper.get(0).get(i).set(j,"347");
-                }
-            }
-        }
-        for (int i = 0; i < nucs.get(0).length + 1; i++) {
-            for (int j = 0; j < nucs.get(2).length + 1; j++) {
-                scoreKeeper.get(i).get(0).set(j, scoring.getIndelPenalty());
-                if (i == 0 && j == 0) {
-                    incomingDirectionKeeper.get(i).get(0).set(j,"-");
-                } else if (i > 0 && j == 0) {
-                    incomingDirectionKeeper.get(i).get(0).set(j,"6");
-                } else if (i == 0 && j > 0) {
-                    incomingDirectionKeeper.get(i).get(0).set(j,"7");
-                } else {
-                    incomingDirectionKeeper.get(i).get(0).set(j,"567");
-                }
-            }
-        }
+        // for (int i = 0; i < nucs.get(0).length + 1; i++) {
+        //     for (int j = 0; j < nucs.get(1).length + 1; j++) {
+        //         scoreKeeper.get(i).get(j).set(0, scoring.getIndelPenalty());
+        //         if (i == 0 && j == 0) {
+        //             incomingDirectionKeeper.get(i).get(j).set(0,"-");
+        //         } else if (i > 0 && j == 0) {
+        //             incomingDirectionKeeper.get(i).get(j).set(0,"6");
+        //         } else if (i == 0 && j > 0) {
+        //             incomingDirectionKeeper.get(i).get(j).set(0,"4");
+        //         } else {
+        //             incomingDirectionKeeper.get(i).get(j).set(0,"246");
+        //         }
+        //     }
+        // }
+        // for (int i = 0; i < nucs.get(1).length + 1; i++) {
+        //     for (int j = 0; j < nucs.get(2).length + 1; j++) {
+        //         scoreKeeper.get(0).get(i).set(j, scoring.getIndelPenalty());
+        //         if (i == 0 && j == 0) {
+        //             incomingDirectionKeeper.get(0).get(i).set(j,"-");
+        //         } else if (i > 0 && j == 0) {
+        //             incomingDirectionKeeper.get(0).get(i).set(j,"4");
+        //         } else if (i == 0 && j > 0) {
+        //             incomingDirectionKeeper.get(0).get(i).set(j,"7");
+        //         } else {
+        //             incomingDirectionKeeper.get(0).get(i).set(j,"347");
+        //         }
+        //     }
+        // }
+        // for (int i = 0; i < nucs.get(0).length + 1; i++) {
+        //     for (int j = 0; j < nucs.get(2).length + 1; j++) {
+        //         scoreKeeper.get(i).get(0).set(j, scoring.getIndelPenalty());
+        //         if (i == 0 && j == 0) {
+        //             incomingDirectionKeeper.get(i).get(0).set(j,"-");
+        //         } else if (i > 0 && j == 0) {
+        //             incomingDirectionKeeper.get(i).get(0).set(j,"6");
+        //         } else if (i == 0 && j > 0) {
+        //             incomingDirectionKeeper.get(i).get(0).set(j,"7");
+        //         } else {
+        //             incomingDirectionKeeper.get(i).get(0).set(j,"567");
+        //         }
+        //     }
+        // }
 
-        if (VERBOSE) {
-            System.out.println("prep");
-            printSpace(scoreKeeper, incomingDirectionKeeper, nucs);
-        }
+        // if (VERBOSE) {
+        //     System.out.println("prep");
+        //     printSpaceMDA(scoreKeeper, incomingDirectionKeeper, nucs);
+        // }
     }
 
 
@@ -500,7 +539,7 @@ public class MultipleLongCommSubseq {
         return;
     }
 
-    public static void printSpaceMDA(MultiDimensionalArray<Integer> scoreKeeper, MultiDimensionalArray<List<Boolean>> incomingDirectionKeeper) {
+    public static void printSpaceMDA(MultiDimensionalArray<Integer> scoreKeeper, MultiDimensionalArray<List<List<Boolean>>> incomingDirectionKeeper) {
 
         System.out.println(scoreKeeper.toString());
         System.out.println();
