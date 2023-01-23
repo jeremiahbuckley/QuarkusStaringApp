@@ -45,11 +45,12 @@ public class Testing {
         nucs.add(seq3);
 
         MultipleLongCommSubseq mlcs = new MultipleLongCommSubseq();
-        mlcs.setVerbosity(false, false, false);
+        mlcs.setVerbosity(true, false, false, true);
 
         List<Object> results = new ArrayList<Object>();
         try {
-            results = mlcs.findCommonSubseq(nucs,  scoring);
+            // results = mlcs.findCommonSubseq(nucs,  scoring);
+            results = mlcs.findCommonSubseqMDA(nucs,  scoring);
         } catch (Exception e) {
             System.out.print(e.getStackTrace());
         }

@@ -63,8 +63,6 @@ public class MultiDimensionalArray<T> {
                     idx.add(dimensionSizes.get(i));
                     min.add(0);
                 }    
-
-                System.out.println("hi " + idx.toString() + " " + min.toString());
             }
 
             @Override
@@ -117,8 +115,6 @@ public class MultiDimensionalArray<T> {
                     idx.add(0);
                     max.add(dimensionSizes.get(i));
                 }    
-
-                System.out.println("hi " + idx.toString() + " " + max.toString());
             }
 
             @Override
@@ -350,163 +346,4 @@ public class MultiDimensionalArray<T> {
         dimensionSpace.put(idx, val);
     }
 
-    static List<List<Boolean>> generatePossibleDirections(int size) throws InvalidKeyException {
-        List<List<Boolean>> possibleDirections = new ArrayList<>();
-
-        switch(size) {
-            case 2: {
-                possibleDirections.add(Arrays.asList(false, true));
-
-                possibleDirections.add(Arrays.asList(true, false));
-                possibleDirections.add(Arrays.asList(true, true));
-                break;
-            }
-            case 3: {
-                possibleDirections.add(Arrays.asList(false, false, true));
-                possibleDirections.add(Arrays.asList(false, true, false));
-                possibleDirections.add(Arrays.asList(false, true, true));
-
-                possibleDirections.add(Arrays.asList(true, false, false));
-                possibleDirections.add(Arrays.asList(true, false, true));
-                possibleDirections.add(Arrays.asList(true, true, false));
-                possibleDirections.add(Arrays.asList(true, true, true));
-                break;
-            }
-            case 4: {
-                possibleDirections.add(Arrays.asList(false, false, false, true));
-                possibleDirections.add(Arrays.asList(false, false, true, false));
-                possibleDirections.add(Arrays.asList(false, false, true, true));
-                possibleDirections.add(Arrays.asList(false, true, false, false));
-                possibleDirections.add(Arrays.asList(false, true, false, true));
-                possibleDirections.add(Arrays.asList(false, true, true, false));
-                possibleDirections.add(Arrays.asList(false, true, true, true));
-
-                possibleDirections.add(Arrays.asList(true, false, false, false));
-                possibleDirections.add(Arrays.asList(true, false, false, true));
-                possibleDirections.add(Arrays.asList(true, false, true, false));
-                possibleDirections.add(Arrays.asList(true, false, true, true));
-                possibleDirections.add(Arrays.asList(true, true, false, false));
-                possibleDirections.add(Arrays.asList(true, true, false, true));
-                possibleDirections.add(Arrays.asList(true, true, true, false));
-                possibleDirections.add(Arrays.asList(true, true, true, true));
-                break;
-            }
-            case 5: {
-                possibleDirections.add(Arrays.asList(false, false, false, false, true));
-                possibleDirections.add(Arrays.asList(false, false, false, true, false));
-                possibleDirections.add(Arrays.asList(false, false, false, true, true));
-                possibleDirections.add(Arrays.asList(false, false, true, false, false));
-                possibleDirections.add(Arrays.asList(false, false, true, false, true));
-                possibleDirections.add(Arrays.asList(false, false, true, true, false));
-                possibleDirections.add(Arrays.asList(false, false, true, true, true));
-                possibleDirections.add(Arrays.asList(false, true, false, false, false));
-                possibleDirections.add(Arrays.asList(false, true, false, false, true));
-                possibleDirections.add(Arrays.asList(false, true, false, true, false));
-                possibleDirections.add(Arrays.asList(false, true, false, true, true));
-                possibleDirections.add(Arrays.asList(false, true, true, false, false));
-                possibleDirections.add(Arrays.asList(false, true, true, false, true));
-                possibleDirections.add(Arrays.asList(false, true, true, true, false));
-                possibleDirections.add(Arrays.asList(false, true, true, true, true));
-
-                possibleDirections.add(Arrays.asList(true, false, false, false, false));
-                possibleDirections.add(Arrays.asList(true, false, false, false, true));
-                possibleDirections.add(Arrays.asList(true, false, false, true, false));
-                possibleDirections.add(Arrays.asList(true, false, false, true, true));
-                possibleDirections.add(Arrays.asList(true, false, true, false, false));
-                possibleDirections.add(Arrays.asList(true, false, true, false, true));
-                possibleDirections.add(Arrays.asList(true, false, true, true, false));
-                possibleDirections.add(Arrays.asList(true, false, true, true, true));
-                possibleDirections.add(Arrays.asList(true, true, false, false, false));
-                possibleDirections.add(Arrays.asList(true, true, false, false, true));
-                possibleDirections.add(Arrays.asList(true, true, false, true, false));
-                possibleDirections.add(Arrays.asList(true, true, false, true, true));
-                possibleDirections.add(Arrays.asList(true, true, true, false, false));
-                possibleDirections.add(Arrays.asList(true, true, true, false, true));
-                possibleDirections.add(Arrays.asList(true, true, true, true, false));
-                possibleDirections.add(Arrays.asList(true, true, true, true, true));
-                break;
-            }
-            case 6: {
-                possibleDirections.add(Arrays.asList(false, false, false, false, false, true));
-                possibleDirections.add(Arrays.asList(false, false, false, false, true, false));
-                possibleDirections.add(Arrays.asList(false, false, false, false, true, true));
-                possibleDirections.add(Arrays.asList(false, false, false, true, false, false));
-                possibleDirections.add(Arrays.asList(false, false, false, true, false, true));
-                possibleDirections.add(Arrays.asList(false, false, false, true, true, false));
-                possibleDirections.add(Arrays.asList(false, false, false, true, true, true));
-                possibleDirections.add(Arrays.asList(false, false, true, false, false, false));
-                possibleDirections.add(Arrays.asList(false, false, true, false, false, true));
-                possibleDirections.add(Arrays.asList(false, false, true, false, true, false));
-                possibleDirections.add(Arrays.asList(false, false, true, false, true, true));
-                possibleDirections.add(Arrays.asList(false, false, true, true, false, false));
-                possibleDirections.add(Arrays.asList(false, false, true, true, false, true));
-                possibleDirections.add(Arrays.asList(false, false, true, true, true, false));
-                possibleDirections.add(Arrays.asList(false, false, true, true, true, true));
-                possibleDirections.add(Arrays.asList(false, true, false, false, false, false));
-                possibleDirections.add(Arrays.asList(false, true, false, false, false, true));
-                possibleDirections.add(Arrays.asList(false, true, false, false, true, false));
-                possibleDirections.add(Arrays.asList(false, true, false, false, true, true));
-                possibleDirections.add(Arrays.asList(false, true, false, true, false, false));
-                possibleDirections.add(Arrays.asList(false, true, false, true, false, true));
-                possibleDirections.add(Arrays.asList(false, true, false, true, true, false));
-                possibleDirections.add(Arrays.asList(false, true, false, true, true, true));
-                possibleDirections.add(Arrays.asList(false, true, true, false, false, false));
-                possibleDirections.add(Arrays.asList(false, true, true, false, false, true));
-                possibleDirections.add(Arrays.asList(false, true, true, false, true, false));
-                possibleDirections.add(Arrays.asList(false, true, true, false, true, true));
-                possibleDirections.add(Arrays.asList(false, true, true, true, false, false));
-                possibleDirections.add(Arrays.asList(false, true, true, true, false, true));
-                possibleDirections.add(Arrays.asList(false, true, true, true, true, false));
-                possibleDirections.add(Arrays.asList(false, true, true, true, true, true));
-
-                possibleDirections.add(Arrays.asList(true, false, false, false, false, false));
-                possibleDirections.add(Arrays.asList(true, false, false, false, false, true));
-                possibleDirections.add(Arrays.asList(true, false, false, false, true, false));
-                possibleDirections.add(Arrays.asList(true, false, false, false, true, true));
-                possibleDirections.add(Arrays.asList(true, false, false, true, false, false));
-                possibleDirections.add(Arrays.asList(true, false, false, true, false, true));
-                possibleDirections.add(Arrays.asList(true, false, false, true, true, false));
-                possibleDirections.add(Arrays.asList(true, false, false, true, true, true));
-                possibleDirections.add(Arrays.asList(true, false, true, false, false, false));
-                possibleDirections.add(Arrays.asList(true, false, true, false, false, true));
-                possibleDirections.add(Arrays.asList(true, false, true, false, true, false));
-                possibleDirections.add(Arrays.asList(true, false, true, false, true, true));
-                possibleDirections.add(Arrays.asList(true, false, true, true, false, false));
-                possibleDirections.add(Arrays.asList(true, false, true, true, false, true));
-                possibleDirections.add(Arrays.asList(true, false, true, true, true, false));
-                possibleDirections.add(Arrays.asList(true, false, true, true, true, true));
-                possibleDirections.add(Arrays.asList(true, true, false, false, false, false));
-                possibleDirections.add(Arrays.asList(true, true, false, false, false, true));
-                possibleDirections.add(Arrays.asList(true, true, false, false, true, false));
-                possibleDirections.add(Arrays.asList(true, true, false, false, true, true));
-                possibleDirections.add(Arrays.asList(true, true, false, true, false, false));
-                possibleDirections.add(Arrays.asList(true, true, false, true, false, true));
-                possibleDirections.add(Arrays.asList(true, true, false, true, true, false));
-                possibleDirections.add(Arrays.asList(true, true, false, true, true, true));
-                possibleDirections.add(Arrays.asList(true, true, true, false, false, false));
-                possibleDirections.add(Arrays.asList(true, true, true, false, false, true));
-                possibleDirections.add(Arrays.asList(true, true, true, false, true, false));
-                possibleDirections.add(Arrays.asList(true, true, true, false, true, true));
-                possibleDirections.add(Arrays.asList(true, true, true, true, false, false));
-                possibleDirections.add(Arrays.asList(true, true, true, true, false, true));
-                possibleDirections.add(Arrays.asList(true, true, true, true, true, false));
-                possibleDirections.add(Arrays.asList(true, true, true, true, true, true));
-                break;
-            }
-            default: {
-                throw new InvalidKeyException("Unexpected size " + size, null);
-            }
-        }
-
-        // todo remove once debug confirms correctness
-        List<Boolean> direction = possibleDirections.get(0);
-        for (List<Boolean> dir : possibleDirections) {
-            if (direction.size() != dir.size()) {
-                throw new InvalidKeyException("Irregular lengths for size: " + size);
-            }
-        }
-
-        return possibleDirections;
-
-    }
 }
