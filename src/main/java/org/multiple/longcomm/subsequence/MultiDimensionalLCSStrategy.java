@@ -57,6 +57,9 @@ public class MultiDimensionalLCSStrategy {
         return existingPaths;
     }
 
+    // TODO: I would be surprised, needs review to confirm
+    //       but I would be surprised if this benefits from
+    //       AMQ messaging or other optimization
     public void buildWorkingStateMDA(List<String[]> nucs, Scoring scoring, MultiDimensionalArray<Integer> scoreKeeper, MultiDimensionalArray<List<List<Integer>>> incomingDirectionKeeper) {
 
         for(List<Integer> idx : incomingDirectionKeeper.reverseIndexIterator) {
@@ -119,6 +122,9 @@ public class MultiDimensionalLCSStrategy {
     }
 
 
+    // TODO: I see this as a the good target for AMQ messaging.
+    //       Theoretically each time a node is calculated,
+    //       it's child-nodes are pushed onto the queue to be calculated later.
     public void calculateScoresMDA(List<String[]> nucs, Scoring scoring, MultiDimensionalArray<Integer> scoreKeeper, MultiDimensionalArray<List<List<Integer>>> incomingDirectionKeeper) {
         for(List<Integer> idx : incomingDirectionKeeper.forwardIndexIterator) {
             int zCount = 0;
@@ -183,6 +189,8 @@ public class MultiDimensionalLCSStrategy {
         }
     }
 
+    // TODO: This is also essentially a tree function, so it might benefit from an AMQ broker,
+    //       But... I think it's relatively pretty fast, so the work might not be worth it.
     public void walkBackwardsMDA(MultiDimensionalArray<List<List<Integer>>> incomingDirectionKeeper, List<String[]> nucs, Map<List<Integer>, List<List<Integer>>> existingPaths) throws Exception, IllegalStateException {
 
         Stack<List<Object>> loopStack = new Stack<List<Object>>();

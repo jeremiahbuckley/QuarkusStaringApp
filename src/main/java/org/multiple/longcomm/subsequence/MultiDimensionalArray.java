@@ -21,6 +21,7 @@ public class MultiDimensionalArray<T> {
     int maxAllowedSize = 20000;
     int maxAllowedDimensions = 6;
 
+    // TODO : need to move this data store to Infinispan
     Map<List<Integer>, T> dimensionSpace = new HashMap<List<Integer>, T>();
 
     public IndexIterator<T> reverseIndexIterator = null;
