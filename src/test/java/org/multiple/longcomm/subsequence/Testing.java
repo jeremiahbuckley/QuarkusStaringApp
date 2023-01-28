@@ -16,22 +16,20 @@ public class Testing {
 
     private List<Object> initTestFromFile(String inFile) {
 
-        String nuc1 = "";
-        String nuc2 = "";
-        String nuc3 = "";
+
+        List<String[]> nucs = new ArrayList<String[]>();
+        Scanner sc = null;
         try {
             File file = new File(inFile);
-            Scanner sc = new Scanner(file);
-            nuc1 = sc.nextLine();
-            nuc2 = sc.nextLine();
-            nuc3 = sc.nextLine();
-            sc.close();
+            sc = new Scanner(file);
+            while (sc.hasNext()) {
+                nucs.add(sc.next().split(""));
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+        } finally {
+            sc.close();
         }
-        String[] seq1 = nuc1.split("");
-        String[] seq2 = nuc2.split("");
-        String[] seq3 = nuc3.split("");
         
         int match_reward = 1;
         int mismatch_penalty = 0;
@@ -39,13 +37,9 @@ public class Testing {
 
         Scoring scoring = new Scoring(match_reward, mismatch_penalty, indel_penalty);
     
-        List<String[]> nucs = new ArrayList<String[]>();
-        nucs.add(seq1);
-        nucs.add(seq2);
-        nucs.add(seq3);
-
         MultipleLongCommSubseq mlcs = new MultipleLongCommSubseq();
-        mlcs.setVerbosity(true, false, false, true);
+        mlcs.setVerbosity(true, false, false, false);
+
 
         List<Object> results = new ArrayList<Object>();
         try {
@@ -66,14 +60,29 @@ public class Testing {
         List<String> assertMatchSequences = new ArrayList<String>();
         try {
             File file = new File(assertFile);
+            Boolean foundEmptyLine = false;
+            Boolean foundScore = false;
             try(Scanner sc = new Scanner(file)) {
-                assertPathScore = Integer.valueOf(sc.nextLine());
-                assertMatchSequences.add(sc.nextLine());
-                assertMatchSequences.add(sc.nextLine());
-                assertMatchSequences.add(sc.nextLine());
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                while (sc.hasNext()) {
+                    if (!foundEmptyLine) {
+                        if (!foundScore) {
+                            assertPathScore = Integer.valueOf(sc.nextLine());
+                            foundScore = true;
+                        } else {
+                            String ams = sc.nextLine().strip();
+                            if (ams.length() == 0) {
+                                foundEmptyLine = true;
+                            } else {
+                                assertMatchSequences.add(ams);
+                            }
+                        }
+                    } else {
+                        sc.nextLine();
+                    }
+                }
             }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         } catch (NullPointerException e) {
             e.printStackTrace();
         }
@@ -84,15 +93,22 @@ public class Testing {
 
         Boolean foundWinner = false;
 
+
         List<List<String>> resultMatchSequencesSets = (List<List<String>>) results.get(1);
         for (List<String> resultMatchSequences : resultMatchSequencesSets) {
-            if ((resultMatchSequences.get(0).equals(assertMatchSequences.get(0)) && resultMatchSequences.get(1).equals(assertMatchSequences.get(1)) && resultMatchSequences.get(2).equals(assertMatchSequences.get(2))) || 
-                (resultMatchSequences.get(0).equals(assertMatchSequences.get(0)) && resultMatchSequences.get(2).equals(assertMatchSequences.get(1)) && resultMatchSequences.get(1).equals(assertMatchSequences.get(2))) || 
-                (resultMatchSequences.get(1).equals(assertMatchSequences.get(0)) && resultMatchSequences.get(0).equals(assertMatchSequences.get(1)) && resultMatchSequences.get(2).equals(assertMatchSequences.get(2))) || 
-                (resultMatchSequences.get(1).equals(assertMatchSequences.get(0)) && resultMatchSequences.get(2).equals(assertMatchSequences.get(1)) && resultMatchSequences.get(0).equals(assertMatchSequences.get(2))) || 
-                (resultMatchSequences.get(2).equals(assertMatchSequences.get(0)) && resultMatchSequences.get(0).equals(assertMatchSequences.get(1)) && resultMatchSequences.get(1).equals(assertMatchSequences.get(2))) || 
-                (resultMatchSequences.get(2).equals(assertMatchSequences.get(0)) && resultMatchSequences.get(1).equals(assertMatchSequences.get(1)) && resultMatchSequences.get(0).equals(assertMatchSequences.get(2))))
-                    foundWinner = true;
+            List<Integer> assertMatchedIndexes = new ArrayList<Integer>();
+            for (String resultSequence : resultMatchSequences) {
+                for(int i = 0; i < assertMatchSequences.size(); i++) {
+                    if (!assertMatchedIndexes.contains(i)) {
+                        if (resultSequence.equals(assertMatchSequences.get(i))) {
+                            assertMatchedIndexes.add(i);
+                        }
+                    }
+                }
+            }
+            if (resultMatchSequences.size() == assertMatchSequences.size()) {
+                foundWinner = true;
+            }
         }
         assertTrue(foundWinner);
 
@@ -133,16 +149,61 @@ public class Testing {
         iterativeTestHarness("6");
     }
 
+    @Test
     public void testSample7() {
         iterativeTestHarness("7");
     }
-    // @Test
+    @Test
     public void testSample8() {
         iterativeTestHarness("8");
     }
     @Test
     public void testSample9() {
         iterativeTestHarness("9");
+    }
+    @Test
+    public void testSample10() {
+        iterativeTestHarness("10");
+    }
+    @Test
+    public void testSample11() {
+        iterativeTestHarness("11");
+    }
+    @Test
+    public void testSample12() {
+        iterativeTestHarness("12");
+    }
+    @Test
+    public void testSample13() {
+        iterativeTestHarness("13");
+    }
+    @Test
+    public void testSample14() {
+        iterativeTestHarness("14");
+    }
+    @Test
+    public void testSample15() {
+        iterativeTestHarness("15");
+    }
+    @Test
+    public void testSample16() {
+        iterativeTestHarness("16");
+    }
+    @Test
+    public void testSample17() {
+        iterativeTestHarness("17");
+    }
+    @Test
+    public void testSample18() {
+        iterativeTestHarness("18");
+    }
+    @Test
+    public void testSample19() {
+        iterativeTestHarness("19");
+    }
+    @Test
+    public void testSample20() {
+        iterativeTestHarness("20");
     }
 
 }

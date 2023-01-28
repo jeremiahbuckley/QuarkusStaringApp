@@ -65,47 +65,22 @@ public class MultiDimensionalLCSStrategy {
         for(List<Integer> idx : incomingDirectionKeeper.reverseIndexIterator) {
             System.out.println(idx.toString());
             int nzCount = 0;
+            int maxDistance = 0;
             for(int d : idx) {
                 if (d != 0) {
                     nzCount++;
+                    if (d > maxDistance) {
+                        maxDistance = d;
+                    }
                 }
             }
 
             if (nzCount < idx.size()) {
-                int maxDistance = 0;
-                for(int d: idx) {
-                    if ((d != 0) && (d > maxDistance)) {
-                        maxDistance = d;
-                    }
-                }
                 scoreKeeper.put(idx, (scoring.indelPenalty * maxDistance));
             }
 
 
-            int nzFound = 0;
-            List<List<Integer>> dirAvailable = new ArrayList<List<Integer>>();
-            // note: not Math.pow(2, nzCount) - 1, the total list is 2^n-1, so , have to do -2 for the cycle control
-            for(int i = 0; i < Math.pow(2, nzCount) -1; i++) {
-                dirAvailable.add(new ArrayList<Integer>());
-            }
-
-            for(int d : idx) {
-                if (d == 0) {
-                    for(List<Integer> lb : dirAvailable) {
-                        lb.add(0);
-                    }
-                } else {
-                    int cycle = (int)Math.round(Math.pow(2, (nzCount-nzFound)));
-                    int halfcycle = cycle / 2;
-                    int cLoc = 1; // note: not Zero, start one-up on the cylce
-                    for(int i = 0; i < dirAvailable.size(); i++) {
-                        Integer dv = (cLoc < halfcycle) ? d : d - 1;
-                        dirAvailable.get(i).add(dv);
-                        cLoc = (cLoc + 1) % cycle;
-                    }
-                    nzFound++;
-                }
-            }
+            List<List<Integer>> dirAvailable = generateIndexesOfAllContributingNodes(idx, true);
 
             List<List<Integer>> copyToDirAvailable = new ArrayList<List<Integer>>();
             for(List<Integer> da : dirAvailable) {
@@ -138,22 +113,7 @@ public class MultiDimensionalLCSStrategy {
             if (zCount > 0)
                 continue;
             
-            List<List<Integer>> contributingIdx = new ArrayList<List<Integer>>();
-            for(int i = 0; i < Math.pow(2, idx.size()) -1; i++) {
-                contributingIdx.add(new ArrayList<Integer>());
-            }
-    
-
-            for(int i = 0; i < idx.size(); i++) {
-                int cycle = (int)Math.round(Math.pow(2, idx.size() - i));
-                int halfcycle = cycle / 2;
-                int cLoc = 1; // note: not Zero, start one-up on the cylce
-                for(int j = 0; j < contributingIdx.size(); j++) {
-                    Integer dv = (cLoc < halfcycle) ? idx.get(i) : idx.get(i) - 1;
-                    contributingIdx.get(j).add(dv);
-                    cLoc = (cLoc + 1) % cycle;
-                }
-            }
+            List<List<Integer>> contributingIdx = generateIndexesOfAllContributingNodes(idx, false);
 
             int matchAdvantage = Integer.MIN_VALUE;
             List<Integer> possibleScores = new ArrayList<Integer>();
@@ -294,6 +254,51 @@ public class MultiDimensionalLCSStrategy {
         System.out.println(incomingDirectionKeeper.toString());
         System.out.println();
 
+    }
+
+    // For an index, return every permutation of idx-digit - 1, except for the one where no idx-digits are -1
+    // For example: for index [4, 5, 7] return
+    // [[4, 5, 6], [4, 4, 7], [4, 4, 6], [3, 5, 7], [3, 5, 6], [3, 4, 7], [3, 4, 6]
+
+    // If excludeZeroIndexes = false, don't include the permutations where the index-0 digit would be -1
+    // For example: for [4, 0, 7], return
+    // [[4, 0, 6], [3, 0, 7], [3, 0, 6]
+
+    private List<List<Integer>> generateIndexesOfAllContributingNodes(List<Integer> nodeIndex, Boolean excludeZeroIndexes) {
+        System.out.println(nodeIndex.toString());
+        int nzCount = 0;
+        for(int d : nodeIndex) {
+            if (d != 0) {
+                nzCount++;
+            }
+        }
+
+        int validContributors = nzCount;
+        List<List<Integer>> contributingIdx = new ArrayList<List<Integer>>();
+        for(int i = 0; i < Math.pow(2, validContributors) -1; i++) {
+            contributingIdx.add(new ArrayList<Integer>());
+        }
+
+        int contributorsIndexed = 0;
+        for(int d : nodeIndex) {
+            if (d == 0) {
+                for(List<Integer> lb : contributingIdx) {
+                    lb.add(0);
+                }
+            } else {
+                int cycle = (int)Math.round(Math.pow(2, (validContributors-contributorsIndexed)));
+                int halfcycle = cycle / 2;
+                int cycleIdx = 1; // note: not Zero, start one-up on the cylce
+                for(List<Integer> lb : contributingIdx) {
+                    Integer dv = (cycleIdx < halfcycle) ? d : d - 1;
+                    lb.add(dv);
+                    cycleIdx = (cycleIdx + 1) % cycle;
+                }
+                contributorsIndexed++;
+            }
+        }
+
+        return contributingIdx; 
     }
 
 

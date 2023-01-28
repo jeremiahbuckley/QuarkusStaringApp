@@ -25,7 +25,7 @@ public class MultipleLongCommSubseq {
     public static Integer SECONDS_CONST_15 = 15 * 1000;
     public static Long NEXT_INTERVAL = 0L;
 
-    public static Boolean USE_3D_STRATEGY = true;
+    public static Boolean USE_3D_STRATEGY = false;
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
@@ -56,7 +56,7 @@ public class MultipleLongCommSubseq {
                 TIMED_STATUS = true;
                 DEBUG = true; 
             } else if (args[i].equals("-n")) {
-                USE_3D_STRATEGY = false;
+                USE_3D_STRATEGY = true;
             } else {
                 System.out.println(String.format("No match for %d - %s", i, args[i]));
             }

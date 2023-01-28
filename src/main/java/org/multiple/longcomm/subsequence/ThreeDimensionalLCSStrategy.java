@@ -8,6 +8,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Stack;
 
+
+// This is an older logic which isn't part of the standard running logic
+// It is retained because the iteration logic is waay easier than MultiDimensionalLCS.
+// So, for now it is the Source of Truth. If a 3-way comparison is run with both
+// this and MultiDimensionalLCS, and their answers are different, this generated
+// the right answer
+// You can use it by useing the "-n" flag when excecuting the main program
+// Without that flag, the program runs MultiDimensionalLCS
+
 public class ThreeDimensionalLCSStrategy extends MultiDimensionalLCSStrategy {
 
 
