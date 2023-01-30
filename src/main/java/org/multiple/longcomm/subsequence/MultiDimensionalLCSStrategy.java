@@ -63,7 +63,9 @@ public class MultiDimensionalLCSStrategy {
     public void buildWorkingStateMDA(List<String[]> nucs, Scoring scoring, MultiDimensionalArray<Integer> scoreKeeper, MultiDimensionalArray<List<List<Integer>>> incomingDirectionKeeper) {
 
         for(List<Integer> idx : incomingDirectionKeeper.reverseIndexIterator) {
-            System.out.println(idx.toString());
+            if (DEBUG) {
+                System.out.println(idx.toString());
+            }
             int nzCount = 0;
             int maxDistance = 0;
             for(int d : idx) {
@@ -265,7 +267,9 @@ public class MultiDimensionalLCSStrategy {
     // [[4, 0, 6], [3, 0, 7], [3, 0, 6]
 
     private List<List<Integer>> generateIndexesOfAllContributingNodes(List<Integer> nodeIndex, Boolean excludeZeroIndexes) {
-        System.out.println(nodeIndex.toString());
+        if (DEBUG) {
+            System.out.println(nodeIndex.toString());
+        }
         int nzCount = 0;
         for(int d : nodeIndex) {
             if (d != 0) {

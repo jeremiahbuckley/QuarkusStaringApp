@@ -32,17 +32,13 @@ public class MultipleLongCommSubseq {
         NEXT_INTERVAL = startTime + SECONDS_CONST_15;
 
         List<String[]> nucs = new ArrayList<String[]>();
-        Scanner sc = null;
-        try {
-            File file = new File(args[0]);
-            sc = new Scanner(file);
+        File file = new File(args[0]);
+        try (Scanner sc = new Scanner(file)){
             while (sc.hasNext()) {
                 nucs.add(sc.next().split(""));
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } finally {
-            sc.close();
         }
 
         for(int i=1; i < args.length; i++) {
