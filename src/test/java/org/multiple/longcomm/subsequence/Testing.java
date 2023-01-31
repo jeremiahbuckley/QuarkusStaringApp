@@ -2,6 +2,7 @@ package org.multiple.longcomm.subsequence;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -144,10 +145,12 @@ public class Testing {
     }
 
     @Test
+    @Tag("slow")
     public void testSample7() {
         iterativeTestHarness("7");
     }
     @Test
+    @Tag("slow")
     public void testSample8() {
         iterativeTestHarness("8");
     }
