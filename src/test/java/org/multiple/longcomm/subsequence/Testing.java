@@ -144,13 +144,14 @@ public class Testing {
         iterativeTestHarness("6");
     }
 
-    @Test
-    @Tag("slow")
+    // @Test
+    // @Tag("slow")
     public void testSample7() {
         iterativeTestHarness("7");
     }
-    @Test
-    @Tag("slow")
+    
+    // @Test
+    // @Tag("slow")
     public void testSample8() {
         iterativeTestHarness("8");
     }

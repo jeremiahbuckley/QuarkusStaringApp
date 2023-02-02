@@ -108,8 +108,10 @@ public class MultipleLongCommSubseq {
 
 
         MultiDimensionalLCSStrategy mdlcss = new MultiDimensionalLCSStrategy(VERBOSE, DEBUG, TIMED_STATUS, NEXT_INTERVAL, SECONDS_CONST_15);
+        System.out.println("maybe using multidm strategy");
         if (USE_3D_STRATEGY) { 
             mdlcss = new ThreeDimensionalLCSStrategy(VERBOSE, DEBUG, TIMED_STATUS,  NEXT_INTERVAL, SECONDS_CONST_15);
+            System.out.println("using 3d strategy");
         }
         Map<List<Integer>, List<List<Integer>>> existingPaths = mdlcss.scoreSpace(nucs, scoring);
 

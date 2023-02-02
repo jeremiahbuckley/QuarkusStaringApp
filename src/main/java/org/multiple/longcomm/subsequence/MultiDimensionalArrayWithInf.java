@@ -24,7 +24,7 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.context.Flag;
 import org.infinispan.manager.DefaultCacheManager;
 
-public class MultiDimensionalArray<T> {
+public class MultiDimensionalArrayWithInf<T> {
     int dimensions = 0;
     List<Integer> dimensionSizes = new ArrayList<>();
     T t;
@@ -32,20 +32,20 @@ public class MultiDimensionalArray<T> {
     int maxAllowedDimensions = 6;
 
     // TODO : need to move this data store to Infinispan
-    Map<List<Integer>, T> dimensionSpace = new HashMap<List<Integer>, T>();
+    // Map<List<Integer>, T> dimensionSpace = new HashMap<List<Integer>, T>();
 
     public IndexIterator<T> reverseIndexIterator = null;
     public IndexIterator<T> forwardIndexIterator = null;
 
-    // Cache<List<Integer>, T> cache;
+    Cache<List<Integer>, T> cache;
 
     public class IndexIterator<T> implements Iterable<List<Integer>> {
 
-        MultiDimensionalArray<T> mda = null;
+        MultiDimensionalArrayWithInf<T> mda = null;
         T t;
         Boolean reverse;
 
-        public IndexIterator(T t, MultiDimensionalArray mda, Boolean reverse) {
+        public IndexIterator(T t, MultiDimensionalArrayWithInf mda, Boolean reverse) {
             this.mda = mda;
             this.reverse = reverse;
         }
@@ -65,11 +65,11 @@ public class MultiDimensionalArray<T> {
 
             List<Integer> idx = new ArrayList<>();
             List<Integer> min = new ArrayList<>();
-            MultiDimensionalArray<E> mda = null;
+            MultiDimensionalArrayWithInf<E> mda = null;
             Boolean reachedZero = false;
 
 
-            public BackwardsIterator(E e, MultiDimensionalArray<E> incommingmda) {
+            public BackwardsIterator(E e, MultiDimensionalArrayWithInf<E> incommingmda) {
                 this.mda = incommingmda;
                 
                 for(int i = 0; i < this.mda.dimensionSizes.size(); i++) {
@@ -117,11 +117,11 @@ public class MultiDimensionalArray<T> {
 
             List<Integer> idx = new ArrayList<>();
             List<Integer> max = new ArrayList<>();
-            MultiDimensionalArray<E> mda = null;
+            MultiDimensionalArrayWithInf<E> mda = null;
             Boolean reachedMax = false;
 
 
-            public ForwardIterator(E e, MultiDimensionalArray<E> incommingmda) {
+            public ForwardIterator(E e, MultiDimensionalArrayWithInf<E> incommingmda) {
                 this.mda = incommingmda;
                 
                 for(int i = 0; i < this.mda.dimensionSizes.size(); i++) {
@@ -169,7 +169,7 @@ public class MultiDimensionalArray<T> {
 
     }
 
-    MultiDimensionalArray(T t, int[] sizes) throws SizeLimitExceededException {
+    MultiDimensionalArrayWithInf(T t, int[] sizes, String cacheName) throws SizeLimitExceededException {
         this.dimensions = sizes.length;
         this.dimensionSizes = new ArrayList<Integer>();
         int maxSizeCheck = 0;
@@ -184,19 +184,19 @@ public class MultiDimensionalArray<T> {
             throw new SizeLimitExceededException("Required memory set is " + maxSizeCheck + ". Cannot handle sets of size larger than " + maxAllowedSize + ".");
         }
         this.t = t;
-        System.out.println("no infinispan");
+        System.out.println("infinispan starting");
 
-        // // Setup up a clustered cache manager
-        // GlobalConfigurationBuilder global = GlobalConfigurationBuilder.defaultClusteredBuilder();
-        // // Initialize the cache manager
-        // DefaultCacheManager cacheManager = new DefaultCacheManager(global.build());
-        // //Create cache configuration
-        // ConfigurationBuilder builder = new ConfigurationBuilder();
-        // builder.clustering().cacheMode(CacheMode.DIST_SYNC);
-        // // Obtain a cache
-        // cache = cacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE)
-        //         .getOrCreateCache("cache", builder.build());
-        // System.out.println("infinispan up");
+        // Setup up a clustered cache manager
+        GlobalConfigurationBuilder global = GlobalConfigurationBuilder.defaultClusteredBuilder();
+        // Initialize the cache manager
+        DefaultCacheManager cacheManager = new DefaultCacheManager(global.build());
+        //Create cache configuration
+        ConfigurationBuilder builder = new ConfigurationBuilder();
+        builder.clustering().cacheMode(CacheMode.DIST_SYNC);
+        // Obtain a cache
+        cache = cacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE)
+                .getOrCreateCache(cacheName, builder.build());
+        System.out.println("infinispan up");
 
         List<List<Integer>> workingIdxSet = new ArrayList<List<Integer>>();
         for(int i = sizes.length-1; i >= 0; i--){
@@ -220,12 +220,12 @@ public class MultiDimensionalArray<T> {
         }
 
         for(List<Integer> idx : workingIdxSet) {
-            dimensionSpace.put(idx, t);
-            // cache.put(idx, t);
+            // dimensionSpace.put(idx, t);
+            cache.put(idx, t);
         }
     }
 
-    MultiDimensionalArray(T t, List<Integer> sizes) throws SizeLimitExceededException {
+    MultiDimensionalArrayWithInf(T t, List<Integer> sizes, String cacheName) throws SizeLimitExceededException {
         this.dimensions = sizes.size();
         this.dimensionSizes = new ArrayList<Integer>();
         int maxSizeCheck = 0;
@@ -244,19 +244,19 @@ public class MultiDimensionalArray<T> {
         }
         // System.out.println(dimensionSizes.toString());
         this.t = t;
-        System.out.println("no infinispan");
+        System.out.println("infinispan starting");
 
-        // // Setup up a clustered cache manager
-        // GlobalConfigurationBuilder global = GlobalConfigurationBuilder.defaultClusteredBuilder();
-        // // Initialize the cache manager
-        // DefaultCacheManager cacheManager = new DefaultCacheManager(global.build());
-        // //Create cache configuration
-        // ConfigurationBuilder builder = new ConfigurationBuilder();
-        // builder.clustering().cacheMode(CacheMode.DIST_SYNC);
-        // // Obtain a cache
-        // cache = cacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE)
-        //         .getOrCreateCache("cache", builder.build());
-        // System.out.println("infinispan up");
+        // Setup up a clustered cache manager
+        GlobalConfigurationBuilder global = GlobalConfigurationBuilder.defaultClusteredBuilder();
+        // Initialize the cache manager
+        DefaultCacheManager cacheManager = new DefaultCacheManager(global.build());
+        //Create cache configuration
+        ConfigurationBuilder builder = new ConfigurationBuilder();
+        builder.clustering().cacheMode(CacheMode.DIST_SYNC);
+        // Obtain a cache
+        cache = cacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE)
+                .getOrCreateCache(cacheName, builder.build());
+        System.out.println("infinispan up");
 
 
         List<List<Integer>> workingIdxSet = new ArrayList<List<Integer>>();
@@ -281,8 +281,8 @@ public class MultiDimensionalArray<T> {
         }
 
         for(List<Integer> idx : workingIdxSet) {
-            dimensionSpace.put(idx, t);
-            // cache.put(idx, t);
+            // dimensionSpace.put(idx, t);
+            cache.put(idx, t);
         }
         // for(Map.Entry<List<Integer>, T> kvp : dimensionSpace.entrySet()) {
         //     System.out.println(kvp.getKey().toString() + " : " + kvp.getValue().toString());
@@ -355,8 +355,8 @@ public class MultiDimensionalArray<T> {
                     truncatedIdx = idxTrunk;
 
                     output += gridRow + "\n";
-                    gridRow = new String(new char[truncatedIdx.size()]).replace("\0", tabChar) + dimensionSpace.get(idx).toString();
-                    // gridRow = new String(new char[truncatedIdx.size()]).replace("\0", tabChar) + cache.get(idx).toString();
+                    // gridRow = new String(new char[truncatedIdx.size()]).replace("\0", tabChar) + dimensionSpace.get(idx).toString();
+                    gridRow = new String(new char[truncatedIdx.size()]).replace("\0", tabChar) + cache.get(idx).toString();
                     d2idx = idx.get(idx.size()-2);
                     output += hlevel;
                     hlevel = "";
@@ -364,15 +364,15 @@ public class MultiDimensionalArray<T> {
             } else {
                 if (d2idx != idx.get(idx.size()-2)) {
                     output += gridRow + "\n";
-                    gridRow = new String(new char[truncatedIdx.size()]).replace("\0", tabChar) + dimensionSpace.get(idx).toString();
-                    // gridRow = new String(new char[truncatedIdx.size()]).replace("\0", tabChar) + cache.get(idx).toString();
+                    // gridRow = new String(new char[truncatedIdx.size()]).replace("\0", tabChar) + dimensionSpace.get(idx).toString();
+                    gridRow = new String(new char[truncatedIdx.size()]).replace("\0", tabChar) + cache.get(idx).toString();
                     d2idx = idx.get(idx.size()-2);
                 } else {
                     if (gridRow.length() > 0) {
                         gridRow += gridDelimiter;
                     }
-                    gridRow += dimensionSpace.get(idx).toString();
-                    // gridRow += cache.get(idx).toString();
+                    // gridRow += dimensionSpace.get(idx).toString();
+                    gridRow += cache.get(idx).toString();
                 }
             }
         }
@@ -384,13 +384,17 @@ public class MultiDimensionalArray<T> {
     }
 
     public T get(List<Integer> idx) {
-        return dimensionSpace.get(idx);
-        // return cache.get(idx);
+        // return dimensionSpace.get(idx);
+        return cache.get(idx);
     }
 
     public void put(List<Integer> idx, T val) {
-        dimensionSpace.put(idx, val);
-        // cache.put(idx, val);
+        // dimensionSpace.put(idx, val);
+        cache.put(idx, val);
+    }
+
+    public void cleanup() {
+        cache.stop();
     }
 
 }
