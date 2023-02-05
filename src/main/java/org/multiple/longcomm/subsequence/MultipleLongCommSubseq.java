@@ -17,6 +17,10 @@ import javax.naming.SizeLimitExceededException;
 
 import java.lang.IllegalStateException;
 
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.BufferedInputStream;
+import java.io.FileNotFoundException;
 
 public class MultipleLongCommSubseq {
     public static Boolean VERBOSE = false;
@@ -28,59 +32,91 @@ public class MultipleLongCommSubseq {
     public static Boolean USE_3D_STRATEGY = false;
 
     public static void main(String[] args) {
-        long startTime = System.currentTimeMillis();
-        NEXT_INTERVAL = startTime + SECONDS_CONST_15;
+        MultipleLongCommSubseq multipleLongCommSubseq = new MultipleLongCommSubseq();
 
-        List<String[]> nucs = new ArrayList<String[]>();
-        int matchReward = -10000;
-        int mismatchPenalty = 10000;
-        int indelPenalty = 10000;
-        File file = new File(args[0]);
-        try (Scanner sc = new Scanner(file)){
-            matchReward = Integer.parseInt(sc.nextLine().trim());
-            mismatchPenalty = Integer.parseInt(sc.nextLine().trim());
-            indelPenalty = Integer.parseInt(sc.nextLine().trim());
-            while (sc.hasNext()) {
-                nucs.add(sc.next().split(""));
-            }
+        MultipleLongCommonSubsequenceInput input = multipleLongCommSubseq.getInputFromCommand(args);
+
+        List<Object> results = multipleLongCommSubseq.doNucleotideCompare(input);
+
+        multipleLongCommSubseq.printResults(results);
+    }
+
+    public MultipleLongCommSubseq() {
+
+    }
+
+    public MultipleLongCommonSubsequenceInput getInputFromCommand(String[] args) {
+        File f = new File(args[0]);
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(f);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            System.out.print(e);
         }
+        MultipleLongCommonSubsequenceInput input = getWorkingDatasetFromFile(new BufferedInputStream(fis));
 
         for(int i=1; i < args.length; i++) {
             if (args[i].equals("-v")) {
-                VERBOSE = true;
+                input.setVerbose(true);
             } else if (args[i].equals("-vv")) {
-                VERBOSE = true;
-                TIMED_STATUS = true;
+                input.setVerbose(true);
+                input.setTimedStatus(true);
             } else if (args[i].equals("-vvv")) {
-                VERBOSE = true;
-                TIMED_STATUS = true;
-                DEBUG = true; 
+                input.setVerbose(true);
+                input.setTimedStatus(true);
+                input.setDebug(true);
             } else if (args[i].equals("-n")) {
                 USE_3D_STRATEGY = true;
             } else {
                 System.out.println(String.format("No match for %d - %s", i, args[i]));
             }
-
         }
 
-        if (VERBOSE) {
-            for (String[] n : nucs) {
+        if (input.getVerbose()) {
+            for (String[] n : input.getNucs()) {
                 System.out.println(Arrays.toString(n));
             }
         }
 
-        Scoring scoring = new Scoring(matchReward, mismatchPenalty, indelPenalty);
+        return input;
+    }
 
+    public MultipleLongCommonSubsequenceInput getWorkingDatasetFromFile(InputStream inStream)  {
+        MultipleLongCommonSubsequenceInput input = new MultipleLongCommonSubsequenceInput();
+
+        // File file = new File(fileName);
+        // try (Scanner sc = new Scanner(file)){
+        // InputStream inStream = getClass().getResourceAsStream(fileName);
+        try (Scanner sc = new Scanner(inStream)) {
+            int matchReward = Integer.parseInt(sc.nextLine().trim());
+            int mismatchPenalty = Integer.parseInt(sc.nextLine().trim());
+            int indelPenalty = Integer.parseInt(sc.nextLine().trim());
+            List<String[]> nucs = new ArrayList<String[]>();
+            while (sc.hasNext()) {
+                nucs.add(sc.next().split(""));
+            }
+            input.init(matchReward, mismatchPenalty, indelPenalty, nucs);
+        }
+
+        return input;
+
+    }
+
+    public List<Object> doNucleotideCompare(MultipleLongCommonSubsequenceInput input) {
         List<Object> results = new ArrayList<Object>();
         try {
-            results = findCommonSubseqMDA(nucs, scoring);
+            results = findCommonSubseq(input);
         } catch (Exception e) {
             System.out.print(e);
         }
+
+        return results;
+    }
+
+    public void printResults(List<Object> results) {
         int resultsScore = (int) results.get(0);
-        List<List<String>> resultsCandidates = (List<List<String>>) results.get(1);
+        long diffTime = (long) results.get(1);
+        List<List<String>> resultsCandidates = (List<List<String>>) results.get(2);
 
         System.out.println();
         System.out.println("result, showing sample of total created (" + resultsCandidates.size() + ")");
@@ -96,19 +132,20 @@ public class MultipleLongCommSubseq {
             }
         }
 
-        long endTime = System.currentTimeMillis();
-        System.out.println(String.format("Time: %d", (endTime-startTime) / 1000));
+        System.out.println(String.format("Time: %.4f", diffTime / 1000.00));
+
     }
 
-    public static void setVerbosity(Boolean verbose, Boolean timedStatus, Boolean debug, Boolean use3dstrategy) {
-        VERBOSE = verbose;
-        TIMED_STATUS = timedStatus;
-        DEBUG = debug;
-        USE_3D_STRATEGY = use3dstrategy;
-    }
+    public static List<Object> findCommonSubseq(MultipleLongCommonSubsequenceInput input) throws Exception, IllegalStateException {
+        long startTime = System.currentTimeMillis();
+        NEXT_INTERVAL = startTime + SECONDS_CONST_15;
 
-    public static List<Object> findCommonSubseqMDA(List<String[]> nucs, Scoring scoring) throws Exception, IllegalStateException {
-
+        List<String[]> nucs = input.getNucs();
+        Scoring scoring = input.getScoring();
+        VERBOSE = input.getVerbose();
+        TIMED_STATUS = input.getTimedStatus();
+        DEBUG = input.getDebug();
+        USE_3D_STRATEGY = input.getUse3DStrategy();
 
         MultiDimensionalLCSStrategy mdlcss = new MultiDimensionalLCSStrategy(VERBOSE, DEBUG, TIMED_STATUS, NEXT_INTERVAL, SECONDS_CONST_15);
         System.out.println("maybe using multidm strategy");
@@ -147,8 +184,11 @@ public class MultipleLongCommSubseq {
 
         int finalScore = mdlcss.getFinalScore();
 
+        long endTime = System.currentTimeMillis();
+
         List<Object> results = new ArrayList<Object>();
         results.add(finalScore);
+        results.add(endTime-startTime);
         results.add(candidates);
 
         return results;

@@ -18,30 +18,17 @@ public class Testing {
     private List<Object> initTestFromFile(String inFile) {
 
 
-        List<String[]> nucs = new ArrayList<String[]>();
-        int matchReward = -10000;
-        int mismatchPenalty = 10000;
-        int indelPenalty = 10000;
-        InputStream inStream = getClass().getResourceAsStream(inFile);
-        try (Scanner sc = new Scanner(inStream)) {
-            matchReward = Integer.parseInt(sc.nextLine().trim());
-            mismatchPenalty = Integer.parseInt(sc.nextLine().trim());
-            indelPenalty = Integer.parseInt(sc.nextLine().trim());
-            while (sc.hasNext()) {
-                nucs.add(sc.next().strip().split(""));
-            }
-        }
-        
-        Scoring scoring = new Scoring(matchReward, mismatchPenalty, indelPenalty);
-    
         MultipleLongCommSubseq mlcs = new MultipleLongCommSubseq();
-        mlcs.setVerbosity(false, false, false, false);
 
+        MultipleLongCommonSubsequenceInput input = mlcs.getWorkingDatasetFromFile(getClass().getResourceAsStream(inFile));
+        input.setDebug(false);
+        input.setVerbose(false);
+        input.setTimedStatus(false);
+        input.setUse3DStrategy(false);
 
         List<Object> results = new ArrayList<Object>();
         try {
-            // results = mlcs.findCommonSubseq(nucs,  scoring);
-            results = mlcs.findCommonSubseqMDA(nucs,  scoring);
+            results = mlcs.findCommonSubseq(input);
         } catch (Exception e) {
             System.out.print(e.getStackTrace());
         }
@@ -89,7 +76,7 @@ public class Testing {
         Boolean foundWinner = false;
 
 
-        List<List<String>> resultMatchSequencesSets = (List<List<String>>) results.get(1);
+        List<List<String>> resultMatchSequencesSets = (List<List<String>>) results.get(2);
         for (List<String> resultMatchSequences : resultMatchSequencesSets) {
             List<Integer> assertMatchedIndexes = new ArrayList<Integer>();
             for (String resultSequence : resultMatchSequences) {
