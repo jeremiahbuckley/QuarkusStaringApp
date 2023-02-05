@@ -19,18 +19,20 @@ public class Testing {
 
 
         List<String[]> nucs = new ArrayList<String[]>();
+        int matchReward = -10000;
+        int mismatchPenalty = 10000;
+        int indelPenalty = 10000;
         InputStream inStream = getClass().getResourceAsStream(inFile);
         try (Scanner sc = new Scanner(inStream)) {
+            matchReward = Integer.parseInt(sc.nextLine().trim());
+            mismatchPenalty = Integer.parseInt(sc.nextLine().trim());
+            indelPenalty = Integer.parseInt(sc.nextLine().trim());
             while (sc.hasNext()) {
                 nucs.add(sc.next().strip().split(""));
             }
         }
         
-        int match_reward = 1;
-        int mismatch_penalty = 0;
-        int indel_penalty = 0;
-
-        Scoring scoring = new Scoring(match_reward, mismatch_penalty, indel_penalty);
+        Scoring scoring = new Scoring(matchReward, mismatchPenalty, indelPenalty);
     
         MultipleLongCommSubseq mlcs = new MultipleLongCommSubseq();
         mlcs.setVerbosity(false, false, false, false);
@@ -149,7 +151,7 @@ public class Testing {
     public void testSample7() {
         iterativeTestHarness("7");
     }
-    
+
     // @Test
     // @Tag("slow")
     public void testSample8() {

@@ -31,13 +31,12 @@ public class MultiDimensionalArray<T> {
     int maxAllowedSize = 20000;
     int maxAllowedDimensions = 6;
 
-    // TODO : need to move this data store to Infinispan
-    // Map<List<Integer>, T> dimensionSpace = new HashMap<List<Integer>, T>();
+    // TODO : need to move this data store to non-local
+    Cache<List<Integer>, T> cache;
+
 
     public IndexIterator<T> reverseIndexIterator = null;
     public IndexIterator<T> forwardIndexIterator = null;
-
-    Cache<List<Integer>, T> cache;
 
     public class IndexIterator<T> implements Iterable<List<Integer>> {
 

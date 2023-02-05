@@ -32,8 +32,14 @@ public class MultipleLongCommSubseq {
         NEXT_INTERVAL = startTime + SECONDS_CONST_15;
 
         List<String[]> nucs = new ArrayList<String[]>();
+        int matchReward = -10000;
+        int mismatchPenalty = 10000;
+        int indelPenalty = 10000;
         File file = new File(args[0]);
         try (Scanner sc = new Scanner(file)){
+            matchReward = Integer.parseInt(sc.nextLine().trim());
+            mismatchPenalty = Integer.parseInt(sc.nextLine().trim());
+            indelPenalty = Integer.parseInt(sc.nextLine().trim());
             while (sc.hasNext()) {
                 nucs.add(sc.next().split(""));
             }
@@ -65,9 +71,6 @@ public class MultipleLongCommSubseq {
             }
         }
 
-        int matchReward = 1;
-        int mismatchPenalty = 0;
-        int indelPenalty = -1;
         Scoring scoring = new Scoring(matchReward, mismatchPenalty, indelPenalty);
 
         List<Object> results = new ArrayList<Object>();
