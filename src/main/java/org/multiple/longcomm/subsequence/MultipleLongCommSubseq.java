@@ -36,9 +36,9 @@ public class MultipleLongCommSubseq {
 
         MultipleLongCommonSubsequenceInput input = multipleLongCommSubseq.getInputFromCommand(args);
 
-        List<Object> results = multipleLongCommSubseq.doNucleotideCompare(input);
+        MultipleLongCommonSubseqenceOutput results = multipleLongCommSubseq.doNucleotideCompare(input);
 
-        multipleLongCommSubseq.printResults(results);
+        multipleLongCommSubseq.resultsToStdOut(results);
     }
 
     public MultipleLongCommSubseq() {
@@ -84,9 +84,6 @@ public class MultipleLongCommSubseq {
     public MultipleLongCommonSubsequenceInput getWorkingDatasetFromFile(InputStream inStream)  {
         MultipleLongCommonSubsequenceInput input = new MultipleLongCommonSubsequenceInput();
 
-        // File file = new File(fileName);
-        // try (Scanner sc = new Scanner(file)){
-        // InputStream inStream = getClass().getResourceAsStream(fileName);
         try (Scanner sc = new Scanner(inStream)) {
             int matchReward = Integer.parseInt(sc.nextLine().trim());
             int mismatchPenalty = Integer.parseInt(sc.nextLine().trim());
@@ -99,31 +96,25 @@ public class MultipleLongCommSubseq {
         }
 
         return input;
-
     }
 
-    public List<Object> doNucleotideCompare(MultipleLongCommonSubsequenceInput input) {
-        List<Object> results = new ArrayList<Object>();
+    public MultipleLongCommonSubseqenceOutput doNucleotideCompare(MultipleLongCommonSubsequenceInput input) {
         try {
-            results = findCommonSubseq(input);
+            return findCommonSubseq(input);
         } catch (Exception e) {
             System.out.print(e);
         }
-
-        return results;
+        return null;
     }
 
-    public void printResults(List<Object> results) {
-        int resultsScore = (int) results.get(0);
-        long diffTime = (long) results.get(1);
-        List<List<String>> resultsCandidates = (List<List<String>>) results.get(2);
+    public void resultsToStdOut(MultipleLongCommonSubseqenceOutput results) {
 
         System.out.println();
-        System.out.println("result, showing sample of total created (" + resultsCandidates.size() + ")");
+        System.out.println("result, showing sample of total created (" + results.getMatchSets().size() + ")");
         int maxOut = 20;
-        for(List<String> cSet : resultsCandidates) {
+        for(List<String> cSet : results.getMatchSets()) {
             if (maxOut > 0) {
-                System.out.println(resultsScore);
+                System.out.println(results.getScore());
                 for(String candidate : cSet) {
                     System.out.println(candidate);
                 }
@@ -132,11 +123,11 @@ public class MultipleLongCommSubseq {
             }
         }
 
-        System.out.println(String.format("Time: %.4f", diffTime / 1000.00));
+        System.out.println(String.format("Time: %.4f", results.getTimeElapsed() / 1000.00));
 
     }
 
-    public static List<Object> findCommonSubseq(MultipleLongCommonSubsequenceInput input) throws Exception, IllegalStateException {
+    public static MultipleLongCommonSubseqenceOutput findCommonSubseq(MultipleLongCommonSubsequenceInput input) throws Exception, IllegalStateException {
         long startTime = System.currentTimeMillis();
         NEXT_INTERVAL = startTime + SECONDS_CONST_15;
 
@@ -187,12 +178,10 @@ public class MultipleLongCommSubseq {
         long endTime = System.currentTimeMillis();
 
         List<Object> results = new ArrayList<Object>();
-        results.add(finalScore);
-        results.add(endTime-startTime);
-        results.add(candidates);
 
-        return results;
-    
+        MultipleLongCommonSubseqenceOutput output = new MultipleLongCommonSubseqenceOutput(finalScore, endTime, candidates);
+
+        return output;    
     }
 
 

@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class Testing {
 
-    private List<Object> initTestFromFile(String inFile) {
+    private MultipleLongCommonSubseqenceOutput initTestFromFile(String inFile) {
 
 
         MultipleLongCommSubseq mlcs = new MultipleLongCommSubseq();
@@ -26,19 +26,18 @@ public class Testing {
         input.setTimedStatus(false);
         input.setUse3DStrategy(false);
 
-        List<Object> results = new ArrayList<Object>();
         try {
-            results = mlcs.findCommonSubseq(input);
+            return mlcs.findCommonSubseq(input);
         } catch (Exception e) {
             System.out.print(e.getStackTrace());
         }
-        return results;
+        return null;
     }
 
     private void fileBasedTest(String inFile, String assertFile) {
         long startTime = System.currentTimeMillis();
 
-        List<Object> results = initTestFromFile(inFile);
+        MultipleLongCommonSubseqenceOutput results = initTestFromFile(inFile);
 
         int assertPathScore = -1;
         List<String> assertMatchSequences = new ArrayList<String>();
@@ -69,15 +68,14 @@ public class Testing {
             e.printStackTrace();
         }
 
-        System.out.println((int)results.get(0));
+        System.out.println(results.getScore());
         System.out.println(assertPathScore);
-        assertEquals((int)results.get(0), assertPathScore);
+        assertEquals(results.getScore(), assertPathScore);
 
         Boolean foundWinner = false;
 
 
-        List<List<String>> resultMatchSequencesSets = (List<List<String>>) results.get(2);
-        for (List<String> resultMatchSequences : resultMatchSequencesSets) {
+        for (List<String> resultMatchSequences : results.getMatchSets()) {
             List<Integer> assertMatchedIndexes = new ArrayList<Integer>();
             for (String resultSequence : resultMatchSequences) {
                 for(int i = 0; i < assertMatchSequences.size(); i++) {
@@ -88,7 +86,7 @@ public class Testing {
                     }
                 }
             }
-            if (resultMatchSequences.size() == assertMatchSequences.size()) {
+            if (resultMatchSequences.size() == assertMatchedIndexes.size()) {
                 foundWinner = true;
             }
         }

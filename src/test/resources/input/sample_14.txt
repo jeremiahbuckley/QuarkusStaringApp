@@ -1,0 +1,9 @@
+{
+    "matchReward": 1,
+    "mismatchPenalty": 0,
+    "indelPenalty": 0,
+    "nucs": [
+        "TT",
+        "TT"
+    ]
+}
