@@ -8,6 +8,28 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Stack;
 
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.MapMessage;
+import javax.jms.TextMessage;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+
+import java.io.StringWriter;
+import java.io.StringReader;
+
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonReader;
+import javax.json.JsonArray;
 
 public class MultiDimensionalLCSStrategy {
     
@@ -27,6 +49,12 @@ public class MultiDimensionalLCSStrategy {
         this.NEXT_INTERVAL = next_interval;
         this.SECONDS_CONST_15 = seconds_const_15;
 
+        try {
+            this.createAMQConnection();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
     }
 
     public int getFinalScore() {
@@ -35,6 +63,86 @@ public class MultiDimensionalLCSStrategy {
         scoreKeeper.cleanup();
         incomingDirectionKeeper.cleanup();
         return finalScore;
+    }
+
+    public void createAMQConnection() throws Exception {
+        try {
+            // The configuration for the Qpid InitialContextFactory has been supplied in
+            // a jndi.properties file in the classpath, which results in it being picked
+            // up automatically by the InitialContext constructor.
+            Context context = new InitialContext();
+
+            ConnectionFactory factory = (ConnectionFactory) context.lookup("myFactoryLookup");
+            Destination queue = (Destination) context.lookup("myQueueLookup");
+
+            Connection connection = factory.createConnection("admin", "admin");
+            // Connection connection = factory.createConnection(System.getProperty("USER"), System.getProperty("PASSWORD"));
+            connection.setExceptionListener(new MyExceptionListener());
+            connection.start();
+
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+            MessageProducer messageProducer = session.createProducer(queue);
+            MessageConsumer messageConsumer = session.createConsumer(queue);
+
+            TextMessage message = session.createTextMessage("Hello world!");
+            messageProducer.send(message, DeliveryMode.NON_PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
+            TextMessage receivedMessage = (TextMessage) messageConsumer.receive(2000L);
+
+            if (receivedMessage != null) {
+                System.out.println(receivedMessage.getText());
+            } else {
+                System.out.println("No message received within the given timeout!");
+            }
+
+            List<Integer> list = new ArrayList<>();
+            list.add(2);
+            list.add(4);
+            list.add(8);
+          
+            JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+            for (int i : list) {
+              arrayBuilder.add(i);
+            }
+          
+            StringWriter writer = new StringWriter();
+            Json.createWriter(writer).writeArray(arrayBuilder.build());
+            String json = writer.toString();
+          
+            TextMessage mapmessage = session.createTextMessage(json);
+            messageProducer.send(mapmessage, DeliveryMode.NON_PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
+            TextMessage receivedmapMessage = (TextMessage) messageConsumer.receive(2000L);
+
+            if (receivedmapMessage != null) {
+                String receivedjson = receivedmapMessage.getText();
+
+                List<Integer> receivedlist = new ArrayList<>();
+              
+                JsonReader reader = Json.createReader(new StringReader(receivedjson));
+                JsonArray array = reader.readArray();
+                for (int i = 0; i < array.size(); i++) {
+                    receivedlist.add(array.getInt(i));
+                }
+                System.out.println(receivedlist.toString());
+            } else {
+                System.out.println("No mapmessage received within the given timeout!");
+            }
+
+            connection.close();
+        } catch (Exception exp) {
+            System.out.println("Caught exception, exiting.");
+            exp.printStackTrace(System.out);
+            System.exit(1);
+        }
+    }    
+
+    private static class MyExceptionListener implements ExceptionListener {
+        @Override
+        public void onException(JMSException exception) {
+            System.out.println("Connection ExceptionListener fired, exiting.");
+            exception.printStackTrace(System.out);
+            System.exit(1);
+        }
     }
 
     public Map<List<Integer>, List<List<Integer>>> scoreSpace(List<String[]> nucs, Scoring scoring) throws Exception, IllegalStateException {

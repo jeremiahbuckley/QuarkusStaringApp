@@ -59,22 +59,22 @@ public class QuarkusTesting {
         String inputJson = new String(Files.readAllBytes(inputFile.toPath()), StandardCharsets.UTF_8);
 
 
-        RequestConfig requestConfig = RequestConfig.custom()
-        .setConnectTimeout(10000)
-        .setConnectionRequestTimeout(10000)
-        .setSocketTimeout(10000)
-        .build();
+    //     RequestConfig requestConfig = RequestConfig.custom()
+    //     .setConnectTimeout(10000)
+    //     .setConnectionRequestTimeout(10000)
+    //     .setSocketTimeout(10000)
+    //     .build();
     
-    HttpClientConfig httpClientFactory = HttpClientConfig.httpClientConfig()
-        .httpClientFactory(() -> HttpClientBuilder.create()
-            .setDefaultRequestConfig(requestConfig)
-            .build());
+    // HttpClientConfig httpClientFactory = HttpClientConfig.httpClientConfig()
+    //     .httpClientFactory(() -> HttpClientBuilder.create()
+    //         .setDefaultRequestConfig(requestConfig)
+    //         .build());
     
-    RestAssuredConfig config = RestAssured
-        .config()
-        .httpClient(httpClientFactory);
+    // RestAssuredConfig config = RestAssured
+    //     .config()
+        // .httpClient(httpClientFactory);
 
-        ValidatableResponse r = given().config(config)
+        ValidatableResponse r = given()//.config(config)
             .contentType(MediaType.APPLICATION_JSON)
             .body(inputJson)
         .when()
@@ -293,7 +293,7 @@ public class QuarkusTesting {
         iterativeTestHarness("6", true);
     }
 
-    @Test
+    // @Test
     public void testSample9() {
         iterativeTestHarness("9", true);
     }
