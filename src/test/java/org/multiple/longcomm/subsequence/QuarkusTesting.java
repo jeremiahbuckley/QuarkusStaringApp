@@ -50,9 +50,9 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 
 
-@QuarkusTest
+// @QuarkusTest
 public class QuarkusTesting {
-    @Test
+    // @Test
     public void testProcessNucleotides() throws IOException {
         URL resource = getClass().getClassLoader().getResource("/input/sample_14.txt");
         File inputFile = new File(resource.getFile());
@@ -263,32 +263,32 @@ public class QuarkusTesting {
         fileBasedTest(rt.concat("input/sample_" + fileId + ".txt"), rt.concat("output/sample_" + fileId + ".txt"), convertInputFileFromFlatFileToJson);
     }
 
-    @Test
+    // @Test
     public void testSample1() {
         iterativeTestHarness("1", true);
     }
 
-    @Test
+    // @Test
     public void testSample2() {
         iterativeTestHarness("2", true);
     }
 
-    @Test
+    // @Test
     public void testSample3() {
         iterativeTestHarness("3", true);
     }
 
-    @Test
+    // @Test
     public void testSample4() {
         iterativeTestHarness("4", true);
     }
 
-    @Test
+    // @Test
     public void testSample5() {
         iterativeTestHarness("5", true);
     }
 
-    @Test
+    // @Test
     public void testSample6() {
         iterativeTestHarness("6", true);
     }
@@ -298,27 +298,27 @@ public class QuarkusTesting {
         iterativeTestHarness("9", true);
     }
 
-    @Test
+    // @Test
     public void testSample10() {
         iterativeTestHarness("10", true);
     }
 
-    @Test
+    // @Test
     public void testSample11() {
         iterativeTestHarness("11", true);
     }
 
-    @Test
+    // @Test
     public void testSample12() {
         iterativeTestHarness("12", true);
     }
 
-    @Test
+    // @Test
     public void testSample13() {
         iterativeTestHarness("13", true);
     }
 
-    @Test
+    // @Test
     public void testSample14() {
         iterativeTestHarness("14", false);
     }

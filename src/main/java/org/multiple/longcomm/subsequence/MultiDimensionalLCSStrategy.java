@@ -49,11 +49,11 @@ public class MultiDimensionalLCSStrategy {
         this.NEXT_INTERVAL = next_interval;
         this.SECONDS_CONST_15 = seconds_const_15;
 
-        try {
-            this.createAMQConnection();
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
+        // try {
+        //     this.createAMQConnection();
+        // } catch (Exception ex) {
+        //     System.out.println(ex.getMessage());
+        // }
 
     }
 
