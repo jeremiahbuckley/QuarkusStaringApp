@@ -79,6 +79,18 @@ FROM registry.access.redhat.com/ubi8/openjdk-17:1.14
 
 ENV LANGUAGE='en_US:en'
 
+RUN echo "test where am I"
+RUN pwd
+RUN echo ""
+RUN ls -al .
+
+COPY . /tmp/build
+RUN echo "test target"
+RUN ls -al /tmp/build
+RUN echo ""
+RUN ls -al /tmp/build/target
+RUN echo "test target quarkus"
+RUN ls -al /tmp/build/target/quarkus-app
 
 # We make four distinct layers so if there are application changes the library layers can be re-used
 COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
